@@ -1,0 +1,2831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APALACHES: 30 NOCHES</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inconsolata:wght@300;400;500;700&family=Cinzel:wght@400;600;700&display=swap');
+
+:root {
+  --bg: #0a0805;
+  --bg2: #110e0a;
+  --bg3: #1a1510;
+  --bg4: #221c14;
+  --surface: #2a2318;
+  --surface2: #342c1e;
+  --amber: #c8922a;
+  --amber-dim: #7a5818;
+  --amber-bright: #e8b85a;
+  --red: #8b2020;
+  --red-bright: #c43030;
+  --green: #2a5c3a;
+  --green-bright: #4a9c5a;
+  --text: #d4c8a8;
+  --text-dim: #8a7c5c;
+  --text-bright: #f0e8c8;
+  --border: #3a3020;
+  --border2: #4a4028;
+  --fog: rgba(10,8,5,0.85);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inconsolata', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; }
+
+/* ── TITLE SCREEN ── */
+#screen-title {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 30%, #1a1208 0%, #0a0805 70%);
+  position: relative;
+  text-align: center;
+  padding: 2rem;
+}
+
+.title-fog {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  pointer-events: none;
+}
+
+.title-main {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--amber);
+  text-shadow: 0 0 40px rgba(200,146,42,0.3), 0 2px 0 #000;
+  margin-bottom: 0.3rem;
+}
+
+.title-sub {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.9rem, 2vw, 1.3rem);
+  letter-spacing: 0.4em;
+  color: var(--text-dim);
+  margin-bottom: 0.8rem;
+}
+
+.title-divider {
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--amber-dim), transparent);
+  margin: 1.5rem auto;
+}
+
+.title-quote {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  max-width: 500px;
+  line-height: 1.6;
+  margin-bottom: 3rem;
+}
+
+.btn-primary {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.2em;
+  color: var(--bg);
+  background: var(--amber);
+  border: none;
+  padding: 0.8rem 2.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0.4rem;
+}
+.btn-primary:hover { background: var(--amber-bright); transform: translateY(-1px); }
+
+.btn-ghost {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border2);
+  padding: 0.7rem 2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0.4rem;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--amber-dim); }
+
+/* ── MAIN GAME LAYOUT ── */
+#screen-game {
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.2rem;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.header-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  color: var(--amber-dim);
+}
+
+.header-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.stat-pill .label { letter-spacing: 0.1em; text-transform: uppercase; }
+.stat-pill .val { color: var(--amber); font-weight: 700; min-width: 28px; }
+
+.stat-bar-wrap { width: 60px; height: 5px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.stat-bar { height: 100%; border-radius: 2px; transition: width 0.4s; }
+.bar-health { background: var(--red-bright); }
+.bar-sanity { background: #6a9e8a; }
+.bar-water  { background: #4a7a9e; }
+.bar-food   { background: #8a7a3a; }
+
+/* ── GAME BODY ── */
+.game-body {
+  display: grid;
+  grid-template-columns: 220px 1fr 200px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .game-body { grid-template-columns: 1fr; }
+  .sidebar-left, .sidebar-right { display: none; }
+}
+
+/* ── SIDEBARS ── */
+.sidebar-left, .sidebar-right {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+  overflow-y: auto;
+  font-size: 0.8rem;
+}
+.sidebar-right { border-right: none; border-left: 1px solid var(--border); }
+
+.panel-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  color: var(--amber-dim);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
+  text-transform: uppercase;
+}
+
+/* Inventory */
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  margin-bottom: 1rem;
+}
+.inv-slot {
+  aspect-ratio: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  position: relative;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 2px;
+  line-height: 1.1;
+}
+.inv-slot:hover { border-color: var(--amber-dim); }
+.inv-slot.filled { border-color: var(--border2); color: var(--amber); }
+.inv-slot .qty {
+  position: absolute; top: 1px; right: 2px;
+  font-size: 0.55rem; color: var(--text-dim);
+}
+
+/* Shelter */
+.shelter-display {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.shelter-icon { font-size: 1.8rem; margin-bottom: 0.3rem; }
+.shelter-name { color: var(--amber); font-size: 0.75rem; font-weight: 700; }
+.shelter-level { color: var(--text-dim); font-size: 0.65rem; margin-top: 0.2rem; }
+
+/* Status effects */
+.status-list { display: flex; flex-direction: column; gap: 0.3rem; }
+.status-tag {
+  font-size: 0.65rem;
+  padding: 0.25rem 0.5rem;
+  border-left: 2px solid;
+  background: var(--bg3);
+  line-height: 1.3;
+}
+.status-tag.bad { border-color: var(--red-bright); color: #d07070; }
+.status-tag.good { border-color: var(--green-bright); color: #70c090; }
+.status-tag.neutral { border-color: var(--text-dim); color: var(--text-dim); }
+
+/* Right sidebar — night info / lore */
+.night-counter {
+  text-align: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+.night-num {
+  font-family: 'Cinzel', serif;
+  font-size: 2.5rem;
+  color: var(--amber);
+  line-height: 1;
+}
+.night-label { font-size: 0.65rem; letter-spacing: 0.2em; color: var(--text-dim); }
+.night-of { font-size: 0.7rem; color: var(--text-dim); }
+
+.lore-entry {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 0.6rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.lore-entry:hover { border-color: var(--amber-dim); color: var(--text); }
+.lore-title { font-style: normal; font-family: 'Inconsolata', monospace; color: var(--amber); font-size: 0.65rem; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+
+/* ── MAIN CONTENT AREA ── */
+.game-center {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.phase-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.phase-tab {
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  padding: 0.3rem 1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.phase-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+/* Narrative area */
+.narrative-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  scroll-behavior: smooth;
+}
+
+.narr-block {
+  max-width: 660px;
+  margin: 0 auto 1.2rem;
+  animation: fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.narr-text {
+  font-family: 'IM Fell English', serif;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+.narr-system {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  font-style: italic;
+  padding: 0.3rem 0;
+  border-left: 2px solid var(--border2);
+  padding-left: 0.8rem;
+}
+
+.narr-event {
+  background: var(--bg2);
+  border: 1px solid var(--amber-dim);
+  padding: 1rem 1.2rem;
+  margin: 0.8rem 0;
+}
+
+.narr-event-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  color: var(--amber);
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+}
+
+.narr-event-text {
+  font-family: 'IM Fell English', serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.choices-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.choice-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 0.65rem 1rem;
+  text-align: left;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1.4;
+}
+.choice-btn:hover:not(:disabled) { background: var(--surface); border-color: var(--amber); color: var(--amber-bright); }
+.choice-btn:disabled { opacity: 0.4; cursor: default; }
+.choice-letter {
+  font-family: 'Cinzel', serif;
+  color: var(--amber-dim);
+  font-size: 0.75rem;
+  margin-right: 0.7rem;
+}
+
+.outcome-good { border-left: 3px solid var(--green-bright); padding-left: 0.8rem; color: #80c8a0; }
+.outcome-bad  { border-left: 3px solid var(--red-bright);   padding-left: 0.8rem; color: #c87070; }
+.outcome-neutral { border-left: 3px solid var(--text-dim); padding-left: 0.8rem; }
+
+/* Day actions */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.action-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.action-card:hover { border-color: var(--amber-dim); background: var(--bg3); }
+.action-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+.action-name { font-size: 0.75rem; color: var(--amber); font-family: 'Cinzel', serif; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+.action-desc { font-size: 0.65rem; color: var(--text-dim); line-height: 1.3; }
+
+
+
+/* Utility views: map, journal and lore */
+.utility-panel {
+  max-width: 940px;
+  margin: 0 auto 1.2rem;
+  animation: fadeUp 0.35s ease;
+}
+.utility-card {
+  background: linear-gradient(180deg, rgba(26,21,16,0.98), rgba(12,10,7,0.98));
+  border: 1px solid var(--amber-dim);
+  box-shadow: 0 18px 45px rgba(0,0,0,0.28);
+  padding: clamp(1rem, 2vw, 1.4rem);
+}
+.utility-kicker {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 0.55rem;
+}
+.utility-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1rem, 2.4vw, 1.35rem);
+  color: var(--amber);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.9rem;
+}
+.utility-note {
+  font-family: 'IM Fell English', serif;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-top: 0.8rem;
+}
+.map-frame {
+  background: #090704;
+  border: 1px solid var(--border2);
+  padding: 0.55rem;
+  overflow: hidden;
+}
+.map-image {
+  display: block;
+  width: 100%;
+  max-height: min(68vh, 650px);
+  object-fit: contain;
+  background: #120d08;
+}
+.journal-list { display: grid; gap: 0.75rem; }
+.journal-entry {
+  border-left: 3px solid var(--amber-dim);
+  background: rgba(10,8,5,0.55);
+  padding: 0.75rem 0.9rem;
+}
+.journal-entry-label {
+  font-size: 0.68rem;
+  color: var(--amber-dim);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.journal-entry-text {
+  font-family: 'IM Fell English', serif;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+.spoiler-alert {
+  border: 1px solid var(--red-bright);
+  background: rgba(139,32,32,0.14);
+  color: #e2aaa0;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.lore-doc-grid { display: grid; gap: 0.95rem; }
+.lore-doc-section {
+  background: rgba(17,14,10,0.82);
+  border: 1px solid var(--border2);
+  padding: 1rem;
+}
+.lore-doc-section h3 {
+  font-family: 'Cinzel', serif;
+  color: var(--amber-bright);
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.65rem;
+}
+.lore-doc-section p {
+  font-family: 'IM Fell English', serif;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.72;
+  margin: 0.55rem 0 0;
+}
+.lore-doc-section p:first-child { margin-top: 0; }
+.lore-doc-section .lore-fact {
+  font-family: 'Inconsolata', monospace;
+  color: var(--text-dim);
+  border-left: 2px solid var(--amber-dim);
+  padding-left: 0.7rem;
+}
+.lore-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 1.2rem;
+}
+.lore-modal-box {
+  width: min(720px, 100%);
+  max-height: min(80vh, 720px);
+  overflow-y: auto;
+  background: var(--bg2);
+  border: 1px solid var(--amber-dim);
+  padding: clamp(1.2rem, 3vw, 2rem);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+}
+.lore-modal-box p {
+  font-family: 'IM Fell English', serif;
+  color: var(--text);
+  font-size: 0.96rem;
+  line-height: 1.75;
+  margin-top: 0.8rem;
+}
+@media (max-width: 640px) {
+  .phase-indicator { gap: 0.45rem; flex-wrap: wrap; }
+  .phase-tab { font-size: 0.68rem; padding: 0.35rem 0.55rem; }
+  .narrative-area { padding: 1rem; }
+  .map-frame { padding: 0.35rem; }
+}
+
+/* Time button */
+.time-btn-wrap {
+  padding: 0.8rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  background: var(--bg2);
+}
+
+.time-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  padding: 0.7rem 2rem;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.2s;
+  background: transparent;
+}
+.time-btn.to-night { color: var(--amber-dim); border-color: var(--amber-dim); }
+.time-btn.to-night:hover { color: var(--amber-bright); border-color: var(--amber-bright); background: rgba(200,146,42,0.08); }
+.time-btn.to-day { color: #6a9e8a; border-color: #3a6e5a; }
+.time-btn.to-day:hover { color: #90ceb0; border-color: #5a9e7a; }
+
+/* Death / Win screens */
+#screen-death, #screen-win {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.death-title {
+  font-family: 'Cinzel', serif;
+  font-size: 3rem;
+  color: var(--red-bright);
+  letter-spacing: 0.2em;
+  margin-bottom: 1rem;
+}
+
+.win-title {
+  font-family: 'Cinzel', serif;
+  font-size: 3rem;
+  color: var(--amber);
+  letter-spacing: 0.15em;
+  margin-bottom: 1rem;
+}
+
+.death-msg, .win-msg {
+  font-family: 'IM Fell English', serif;
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  max-width: 500px;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* Intro dialog */
+#intro-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.92);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.intro-box {
+  background: var(--bg2);
+  border: 1px solid var(--amber-dim);
+  max-width: 580px;
+  width: 100%;
+  padding: 2rem;
+}
+.intro-box h2 {
+  font-family: 'Cinzel', serif;
+  color: var(--amber);
+  letter-spacing: 0.15em;
+  margin-bottom: 1.2rem;
+  font-size: 1.1rem;
+}
+.intro-box p {
+  font-family: 'IM Fell English', serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 0.8rem;
+}
+
+/* Flicker animation for horror moments */
+@keyframes flicker {
+  0%,100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.4; }
+  94% { opacity: 1; }
+  97% { opacity: 0.6; }
+  98% { opacity: 1; }
+}
+.horror-moment { animation: flicker 4s infinite; }
+
+.save-toast {
+  position: fixed; bottom: 1rem; right: 1rem;
+  background: var(--bg3); border: 1px solid var(--green-bright);
+  color: var(--green-bright); padding: 0.4rem 0.9rem;
+  font-size: 0.72rem; letter-spacing: 0.1em;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  z-index: 200;
+}
+.save-toast.show { opacity: 1; }
+
+.glitch-text {
+  position: relative; display: inline-block;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ TITLE SCREEN ══════════ -->
+<div id="screen-title" class="screen active">
+  <div class="title-fog"></div>
+  <div class="title-main">APALACHES</div>
+  <div class="title-sub">30 noches</div>
+  <div class="title-divider"></div>
+  <p class="title-quote">"Los bosques tienen memoria. No todos los sonidos provienen de animales.
+  No todas las voces pertenecen a los vivos."</p>
+  <div>
+    <button class="btn-primary" onclick="checkSave()">▸ COMENZAR</button><br>
+    <button class="btn-ghost" onclick="showCredits()">LORE</button>
+  </div>
+</div>
+
+<!-- ══════════ MAIN GAME SCREEN ══════════ -->
+<div id="screen-game" class="screen">
+
+  <!-- Header bar -->
+  <div class="game-header">
+    <div class="header-title">APALACHES</div>
+    <div class="header-stats" id="header-stats"></div>
+    <div style="font-size:0.7rem; color:var(--text-dim); cursor:pointer;" onclick="saveGame()">[ guardar ]</div>
+  </div>
+
+  <!-- 3-col layout -->
+  <div class="game-body">
+
+    <!-- LEFT SIDEBAR: inventory + shelter + statuses -->
+    <div class="sidebar-left">
+      <div class="panel-title">Refugio</div>
+      <div class="shelter-display" id="shelter-display"></div>
+
+      <div class="panel-title">Inventario</div>
+      <div class="inv-grid" id="inv-grid"></div>
+
+      <div class="panel-title">Estado</div>
+      <div class="status-list" id="status-list"></div>
+    </div>
+
+    <!-- CENTER: narrative + actions -->
+    <div class="game-center">
+      <div class="phase-indicator">
+        <div class="phase-tab active" id="tab-narrative" onclick="showNarrative()">Narrativa</div>
+        <div class="phase-tab" id="tab-map" onclick="showMap()">Mapa</div>
+        <div class="phase-tab" id="tab-diario" onclick="showDiario()">Diario</div>
+        <div class="phase-tab" id="tab-lore" onclick="showLoreDocs()">Lore</div>
+      </div>
+
+      <div class="narrative-area" id="narrative-area"></div>
+
+      <div class="time-btn-wrap" id="time-btn-area"></div>
+    </div>
+
+    <!-- RIGHT SIDEBAR: nights + lore -->
+    <div class="sidebar-right">
+      <div class="night-counter" id="night-counter"></div>
+
+      <div class="panel-title">Pistas halladas</div>
+      <div id="lore-panel"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════ DEATH SCREEN ══════════ -->
+<div id="screen-death" class="screen">
+  <div class="death-title">HAS MUERTO</div>
+  <div class="death-msg" id="death-msg">La oscuridad te reclamó.</div>
+  <button class="btn-primary" onclick="resetGame()">▸ VOLVER A INTENTARLO</button>
+</div>
+
+<!-- ══════════ WIN SCREEN ══════════ -->
+<div id="screen-win" class="screen">
+  <div class="win-title">HAS SOBREVIVIDO</div>
+  <div class="win-msg" id="win-msg">Treinta noches en los Apalaches. Has visto lo que pocos han visto y regresado para contarlo. Aunque ya no eres exactamente el mismo.</div>
+  <button class="btn-primary" onclick="resetGame()">▸ NUEVA PARTIDA</button>
+</div>
+
+<!-- Intro overlay -->
+<div id="intro-overlay" style="display:none;">
+  <div class="intro-box">
+    <h2>INSTRUCCIONES</h2>
+    <p>Estás solo en los Apalaches. Tu objetivo: sobrevivir 30 noches.</p>
+    <p><strong style="color:var(--amber)">Durante el día</strong> — Explora, recolecta, construye y cuida tu mente. Elige acciones sabiamente: tienes energía limitada.</p>
+    <p><strong style="color:var(--amber)">Durante la noche</strong> — Algo ocurre. Siempre ocurre algo. Tus decisiones pueden significar la diferencia entre vivir y no hacerlo.</p>
+    <p>La cordura es tan importante como el agua. El bosque recuerda.</p>
+    <button class="btn-primary" style="margin-top:1rem;" onclick="closeIntro()">▸ ENTRAR AL BOSQUE</button>
+  </div>
+</div>
+
+<!-- Save toast -->
+<div class="save-toast" id="save-toast">✓ partida guardada</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════
+const LORE_DOCUMENTATION = [
+  "Marco documental",
+  "Los Apalaches no son solo un escenario de historias de miedo; son una región con una tradición oral muy rica, formada por mitos indígenas, relatos de colonos europeos, religión popular, experiencias de comunidades aisladas y modern folklore contemporáneo. La Encyclopedia of Appalachia es una de las referencias generales más sólidas para partir, porque recoge historia, cultura, lengua, folklore y creencias de toda la región. Para una app, esto te sirve como columna vertebral: separarás folklore tradicional, críptidos, hauntings, luces inexplicables, desapariciones y relatos modernos de internet.",
+  "Raíz indígena",
+  "En la tradición cherokee y de otros pueblos nativos de la zona, muchas narraciones no eran “terror” en el sentido moderno, sino historias sagradas con función ecológica, moral y comunitaria. Un ejemplo documentado es que generaciones de niños cherokee aprendían a vivir en los Apalaches mediante mitos y fórmulas sagradas, y esos relatos explicaban relación con el territorio, el agua, las montañas y los seres no humanos. También aparecen figuras como Uktena, criaturas-serpiente, y narrativas sobre seres poderosos ligados al paisaje; en la tradición oral, estos relatos no son simple fantasía, sino conocimiento cultural transmitido por generaciones.",
+  "Leyendas y criaturas",
+  "Entre los nombres más asociados al folklore apalachense aparecen el Wampus Cat, el Wood Booger, el Snallygaster, el Snarly Yow, el Tailypo, el Grafton Monster, el Mothman y el Big Hoot, además de variantes locales de Sasquatch o “not deer” en relatos modernos. El Wampus Cat, por ejemplo, se vincula a tradiciones cherokee y suele describirse como una criatura felina extraña y agresiva; en algunos relatos se asocia a castigo, protección del territorio o advertencia. Mothman, aunque es más famoso en West Virginia, se ha integrado al imaginario amplio apalachense por su combinación de testigos, prensa, folklore y simbolismo de presagio.",
+  "Casos muy citados",
+  "Hay algunos casos que aparecen una y otra vez en compilaciones y relatos sobre Apalaches. El más famoso es la Bell Witch, una de las casas embrujadas mejor documentadas del folclore estadounidense, situada en Tennessee, con testimonios, tradición local y fuerte presencia cultural posterior. Otro caso recurrente son las Brown Mountain Lights en Carolina del Norte: luces orbs que se reportan desde hace mucho tiempo y que han generado explicaciones sobrenaturales, indígenas y científicas; incluso hubo estudios oficiales y aun así el misterio siguió abierto para mucha gente. También destacan las historias de desapariciones y persecuciones por el bosque que se siguen contando en medios y canales modernos, aunque ahí conviene separar bien lo verificable de lo puramente narrativo.",
+  "Relatos coloniales y locales",
+  "La mezcla cultural en los Apalaches incluye relatos de colonos, referencias a comunidades afrodescendientes, tradiciones cristianas populares y memorias locales que fueron cambiando con el tiempo. Hay además estudios sobre presencia española olvidada en el sur de la región, que te pueden servir si quieres un apartado histórico menos conocido y más serio sobre ocupación, intercambio cultural y relatos tempranos. En cuanto a relatos de terror popular, muchos nacen como advertencias: no entrar solo al bosque, no salir de noche, respetar ciertos lugares, no seguir luces ni voces extrañas. Ese patrón es muy útil para una app porque te permite clasificar cada historia por función: advertencia, memoria comunitaria, experiencia personal o leyenda transmitida.",
+  "Estructura para tu app",
+  "Te recomiendo organizar el contenido en capas. Una primera capa sería “Tradición indígena”; otra, “Folklore colonial y rural”; otra, “Críptidos y entidades”; otra, “Casos de avistamientos y hauntings”; y una última, “Relatos modernos y recopilaciones”. Así podrás etiquetar cada entrada por región, tipo de entidad, época, nivel de documentación y origen de la fuente. Un ejemplo: Brown Mountain Lights = fenómeno luminoso + folklore local + primeras referencias del siglo XIX/XX + explicaciones naturales y sobrenaturales en paralelo.",
+  "Entidades y criaturas",
+  "En los Apalaches, el folklore de criaturas es uno de los bloques más ricos para documentar una app, porque mezcla tradición indígena, relatos de granjas, bosques remotos y reinterpretaciones modernas. Muchas de estas figuras no son “monstruos” en el sentido clásico, sino seres liminales: guardianes, castigos, presagios o advertencias sobre el bosque y la noche.",
+  "Wampus Cat. Criatura felina vinculada a relatos cherokee y a versiones posteriores del sur de los Apalaches. Suele describirse como un gran felino sobrenatural, rápido, silencioso y ligado al castigo o a la frontera entre mundo humano y salvaje.",
+  "Wood Booger. Variante regional del sasquatch o pie grande, especialmente presente en Virginia, Tennessee y zonas vecinas. Es de las figuras más útiles si quieres una categoría de “humanoide del bosque”.",
+  "Snallygaster. Más famosa en Appalachia de Maryland y zonas cercanas. Se le representa como una criatura aérea o reptiliana, mezcla de dragón y depredador fantástico.",
+  "Snarly Yow. Perro negro espectral o criatura canina monstruosa, muy recurrente en relatos locales de caminos y granjas.",
+  "Tailypo. Historia de una criatura pequeña y hostil, muy popular como cuento de advertencia infantil. Su fuerza está en lo oral y en el tono de “si haces X, algo vuelve por ti”.",
+  "Mothman. Aunque su núcleo es West Virginia, se convirtió en un símbolo regional apalache por la cantidad de relatos, prensa y cultura popular.",
+  "Not deer. Figura moderna de internet y folklore reciente: un animal que “parece” ciervo, pero no se comporta como uno. Es importante para tu app si vas a incluir folklore contemporáneo.",
+  "Big Hoot / owl-human hybrids. En varias zonas se cuentan relatos de búhos anómalos, observadores o casi humanos. A veces no son una criatura única, sino un motivo recurrente.",
+  "Luces y presagios",
+  "Uno de los temas más potentes del imaginario apalachense es el de las luces extrañas. Son relatos muy fáciles de indexar en una app porque suelen repetirse con patrones claros: lugar, hora, distancia, color, movimiento y emoción del testigo.",
+  "Brown Mountain Lights. Probablemente el fenómeno luminoso más famoso de la región. Se reporta desde hace mucho tiempo y ha generado teorías sobrenaturales, indígenas y naturales.",
+  "Luces de cementerio o de camino. Aparecen en muchas historias rurales: puntos brillantes, orbes o resplandores que siguen a viajeros.",
+  "Will-o’-the-wisp / jack-o’-lantern. En versiones locales, estas luces engañan, extravían o atraen a personas hacia pantanos, barrancos o bosques.",
+  "Luces de presagio. En la cultura popular apalachense, las luces rara vez son neutrales: suelen anunciar muerte, desgracia o presencia espiritual.",
+  "Fantasmas y casas",
+  "La tradición de fantasmas en los Apalaches es muy fuerte y suele estar ligada a casas rurales, iglesias, cementerios, hoteles viejos y cruces de caminos. Este bloque te sirve para una sección de “hauntings documentados por tradición local” más que para una recopilación de espectros genéricos.",
+  "Bell Witch. Caso esencial. Es probablemente el haunting más citado de Tennessee y uno de los más famosos de Estados Unidos.",
+  "Casas de granja embrujadas. Muchísimas historias de la región giran en torno a propiedades aisladas donde se oyen pasos, golpes, voces y golpes en paredes.",
+  "Espíritus de guerra. En algunas zonas hay relatos de fantasmas asociados a la Guerra Civil, viejos caminos militares o asesinatos locales.",
+  "Niños fantasma. Muy frecuentes en tradiciones de casas viejas, pozos, puentes y cementerios.",
+  "Perros y animales espectrales. Aparecen de forma constante como señales de muerte, castigo o guardianes del territorio.",
+  "Relatos de colonos",
+  "Los colonos europeos en los Apalaches trajeron sus propias supersticiones, que se mezclaron con saberes indígenas y con el aislamiento del terreno montañoso. Eso produjo un folklore híbrido, muy útil para tu documentación porque explica por qué tantas historias parecen parecerse entre sí aunque vengan de comunidades distintas.",
+  "Advertencias de no entrar al bosque de noche.",
+  "Miedo a voces que llaman desde lejos.",
+  "Prohibición de seguir luces, pasos o silbidos.",
+  "Casas que “guardan memoria” y repiten sucesos.",
+  "Cruces de caminos como lugares peligrosos o liminales.",
+  "Muchos relatos coloniales no se conservaron como “casos oficiales”, sino como historia oral transmitida por familias, iglesias y comunidades aisladas. Por eso conviene tratarlos como tradición registrada, no como pruebas físicas.",
+  "Motivos indígenas",
+  "Si quieres una base seria, esta parte es clave. Muchas narraciones apalachenses no se entienden bien sin la cosmovisión cherokee y de otros pueblos originarios.",
+  "Seres del bosque como presencias que no son simples animales.",
+  "Relación espiritual con ríos, montañas y cuevas.",
+  "Historias de transformación y castigo.",
+  "Fronteras entre humano, animal y espíritu.",
+  "Uso pedagógico de los relatos para enseñar conducta y respeto al territorio.",
+  "Aquí conviene evitar presentar estos relatos como “monstruos” sin contexto, porque su sentido original suele ser cultural, moral o ceremonial.",
+  "Casos modernos",
+  "En el folklore contemporáneo de los Apalaches hay una enorme cantidad de relatos de foros, entrevistas, canales de historias y recopilaciones locales. No todos tienen el mismo valor documental, pero sí son útiles si separas bien el tipo de fuente.",
+  "Encuentros con humanoides en el bosque.",
+  "Silbidos, voces o imitaciones humanas.",
+  "Figuras al borde de caminos secundarios.",
+  "Animales imposibles o deformes.",
+  "Sensación de ser observado en zonas remotas.",
+  "Pérdidas de tiempo, desorientación o “apagones” de memoria.",
+  "Este material es ideal para una app si añades metadatos: año, condado, tipo de testigo, distancia al evento, hora, entorno, fiabilidad percibida y si existe o no fuente secundaria.",
+  "Cómo clasificar",
+  "Te conviene construir cada entrada con esta estructura:",
+  "Nombre del relato o entidad.",
+  "Zona geográfica exacta.",
+  "Tipo de fenómeno.",
+  "Origen del relato: indígena, colonial, oral familiar, periodístico, internet.",
+  "Resumen breve del caso.",
+  "Elementos repetidos: bosque, luz, voz, animal, sombra, casa, camino.",
+  "Nivel de documentación: alto, medio o bajo.",
+  "Notas culturales: advertencia, presagio, castigo, protección, misterio.",
+  "Casos famosos",
+  "Aquí tienes una tercera entrega centrada en casos concretos, con el enfoque de que puedas convertirlos en fichas dentro de tu aplicación. Los agrupo por tipo de fenómeno para que luego puedas reutilizarlos fácilmente en categorías o filtros.",
+  "Bell Witch",
+  "Es el caso más célebre del folclore paranormal de Tennessee y uno de los más citados en todo el sur apalachense. La historia gira en torno a una presencia que atormenta a la familia Bell con ruidos, golpes, voces y agresiones, y con el tiempo se convirtió en un referente clásico de hauntings rurales. Para tu app es importante tratarlo como un caso con enorme peso cultural, aunque muy mezclado con tradición oral y reconstrucciones posteriores.",
+  "Brown Mountain Lights",
+  "Uno de los fenómenos luminosos más famosos de los Apalaches. Se habla de luces que aparecen y desaparecen sobre la zona de Brown Mountain, en Carolina del Norte, y que han dado pie a explicaciones sobrenaturales, indígenas y naturales. Es un caso ideal para una categoría de “fenómeno anómalo” porque no depende solo de un testigo, sino de una tradición de avistamientos repetidos.",
+  "Mothman",
+  "Aunque el núcleo más famoso está en West Virginia, Mothman se integra perfectamente en el universo apalachense por su fuerza como leyenda moderna. Se le describe como una figura alada, alta y ominosa, asociada a presagios y a una oleada de testimonios que acabó consolidándolo como icono del misterio regional. Si tu app incluye “criaturas de presagio”, este caso es imprescindible.",
+  "Snallygaster",
+  "Este es un caso muy útil porque mezcla prensa local, imaginación popular y tradición de criatura monstruosa. Se lo suele representar como un ser aéreo, casi dragonesco, vinculado a zonas de Maryland y alrededores apalachenses. Funciona bien como ficha de “criptozoología histórica” porque tiene una identidad muy marcada.",
+  "Snarly Yow",
+  "Criatura canina o perro espectral que aparece en relatos de caminos, granjas y encuentros nocturnos. Suele ser una figura de advertencia, ligada al miedo al trayecto solitario y al territorio liminal entre poblaciones. Dentro de una app, encaja en la familia de “perros negros sobrenaturales” o “guardianes oscuros”.",
+  "Luces y extrañezas",
+  "Estos relatos son muy valiosos porque suelen repetirse con variaciones y generan una sensación de continuidad histórica. Además, son más fáciles de estructurar como base de datos que muchas historias de fantasmas porque admiten atributos observables: color, movimiento, recurrencia y localización.",
+  "Brown Mountain Lights",
+  "Las luces de Brown Mountain se han explicado de muchas formas: almas, señales sobrenaturales, fenómenos atmosféricos o reflejos naturales. Lo importante para tu documentación es que no es un relato aislado, sino una cadena de testimonios y explicaciones competidoras. Eso lo convierte en un caso excelente para mostrar “capas de interpretación”.",
+  "Orbs y luces de camino",
+  "En muchas historias rurales apalachenses aparecen luces pequeñas que atraen, confunden o preceden a un suceso extraño. A menudo se las vincula con cementerios, barrancos, bosques o zonas donde alguien desapareció. Son una categoría muy rica para agrupar relatos breves de testigos.",
+  "Fuego fatuo",
+  "Aunque el motivo es más amplio que los Apalaches, aquí adopta versiones locales que se mezclan con superstición montañesa. Su valor está en que sirve de puente entre folklore europeo y reinterpretación americana. Eso te permite explicar cómo se transforman los motivos tradicionales al cambiar de paisaje y comunidad.",
+  "Relatos de hogar",
+  "Los relatos domésticos son una parte esencial del folklore apalachense porque muchas historias no ocurren en castillos ni ruinas, sino en casas de madera, graneros, sótanos y caminos rurales. La sensación de aislamiento amplifica cualquier ruido o presencia extraña.",
+  "Casas embrujadas",
+  "Muchas comunidades conservan historias de casas donde se oyen pasos, golpes o voces, especialmente por la noche. A menudo el relato se hereda dentro de una familia y se repite durante generaciones, lo que le da persistencia cultural aunque no siempre haya prueba externa. Para una app, esto encaja bien en una categoría de “experiencia transmitida”.",
+  "Presencias familiares",
+  "Algunas historias no describen espectros agresivos, sino la sensación de que un familiar fallecido sigue presente. En el contexto apalachense, esto se mezcla con religión popular, duelo y creencias sobre el regreso de los muertos. No son siempre relatos de miedo; a veces son relatos de consuelo, aviso o continuidad espiritual.",
+  "Ruidos en la noche",
+  "El golpeo en paredes, pasos en el ático, cadenas, susurros y puertas que se abren solas aparecen una y otra vez en la tradición oral. La fuerza de estos relatos está en que son muy fáciles de contar, memorizar y transmitir. Por eso suelen ser de los primeros que conviene incluir en una app si quieres dar sensación de autenticidad regional.",
+  "Relatos de bosque",
+  "Aquí está la esencia más conocida del imaginario apalachense: el bosque como lugar de encuentro con lo no humano. Esta sección es útil para fichas de avistamientos, encuentros extraños y narraciones de supervivencia.",
+  "Silbidos y llamadas",
+  "Son muy frecuentes los relatos de alguien que oye su nombre, un silbido o una voz conocida en el bosque, pero no encuentra a nadie. Estos relatos se repiten en distintas zonas y suelen acabar con el testigo desorientado o con miedo intenso. En la clasificación de tu app, esto podría ir como “imitación de voz” o “señuelo sonoro”.",
+  "Figura al borde del camino",
+  "Otro motivo recurrente es ver una silueta inmóvil junto a una carretera secundaria o una senda forestal. La figura a veces parece humana, otras demasiado alta, delgada o inmóvil para ser normal. Este patrón es especialmente útil porque aparece en muchos relatos de internet sobre Appalachia.",
+  "Animales imposibles",
+  "Ciervos, perros o gatos con comportamientos inusuales aparecen constantemente en historias modernas. El motivo de “animal que no actúa como animal” es especialmente fuerte en el folklore reciente, y te conviene registrarlo como categoría aparte. Eso te permitirá cruzarlo con relatos antiguos de presagios o animales encantados.",
+  "Casos para registrar",
+  "Si quieres documentar bien una app, estos son los casos y motivos que deberías priorizar primero porque tienen mucha fuerza narrativa y variedad de fuentes:",
+  "Bell Witch.",
+  "Brown Mountain Lights.",
+  "Mothman.",
+  "Wampus Cat.",
+  "Wood Booger.",
+  "Snallygaster.",
+  "Snarly Yow.",
+  "Tailypo.",
+  "Relatos de silbidos y llamadas en el bosque.",
+  "Casas embrujadas de granja.",
+  "Animales anómalos o “not deer”.",
+  "Fichas ampliadas",
+  "Te dejo una continuación más útil para documentación de app, con formato de ficha resumida y utilizable. Como siguiente paso, conviene convertir cada caso en un registro con campos fijos: nombre, tipo, zona, cronología, motivo narrativo y valor cultural.",
+  "Bell Witch",
+  "Tipo: haunting doméstico.",
+  "Zona: Tennessee, dentro del imaginario apalachense del sur.",
+  "Qué la hace importante: es uno de los casos más citados del folclore estadounidense y apalachense.",
+  "Motivos recurrentes: ruidos, voces, golpes, agresiones invisibles, presencia persistente.",
+  "Uso para tu app: excelente como caso base de “entidad que hostiga una familia”.",
+  "Valor cultural: muy alto, porque ha sido transmitido, recontado y reinterpretado durante generaciones.",
+  "Brown Mountain Lights",
+  "Tipo: fenómeno luminoso anómalo.",
+  "Zona: Carolina del Norte.",
+  "Qué la hace importante: es uno de los misterios visuales más duraderos de los Apalaches.",
+  "Motivos recurrentes: luces que aparecen y desaparecen, observación a distancia, explicaciones enfrentadas.",
+  "Uso para tu app: ideal para una ficha de “fenómeno no resuelto”.",
+  "Valor cultural: muy alto, porque combina tradición popular, observación repetida y explicación natural/sobrenatural.",
+  "Mothman",
+  "Tipo: criatura/presagio.",
+  "Zona: West Virginia, extendido al imaginario apalachense general.",
+  "Qué la hace importante: se convirtió en icono de leyenda moderna.",
+  "Motivos recurrentes: figura alada, testigos múltiples, sensación de advertencia.",
+  "Uso para tu app: muy útil para categoría de “entidad de presagio”.",
+  "Valor cultural: alto, porque conecta folklore, prensa y cultura pop.",
+  "Wampus Cat",
+  "Tipo: criatura híbrida o felina sobrenatural.",
+  "Zona: tradición del sur y sureste apalachense.",
+  "Qué la hace importante: mezcla tradición indígena y reinterpretaciones posteriores.",
+  "Motivos recurrentes: sigilo, bosque, castigo, amenaza territorial.",
+  "Uso para tu app: perfecta para una categoría de “criatura del bosque”.",
+  "Valor cultural: alto, por su antigüedad y sus variantes.",
+  "Wood Booger",
+  "Tipo: humanoide del bosque.",
+  "Zona: Virginia y regiones vecinas.",
+  "Qué la hace importante: es la versión local más característica del “bigfoot” apalachense.",
+  "Motivos recurrentes: huellas, avistamientos fugaces, bosque profundo.",
+  "Uso para tu app: encaja en “criptozoología regional”.",
+  "Valor cultural: medio-alto, muy útil por su arraigo local.",
+  "Motivos narrativos",
+  "Si quieres que tu base de datos sea sólida, no basta con guardar el nombre del caso. En los Apalaches se repiten mucho ciertos motivos que conviene indexar porque cruzan relatos muy distintos.",
+  "Voces imitadas. Algo llama al testigo con voz humana o familiar.",
+  "Luces errantes. Fenómenos luminosos que atraen o desorientan.",
+  "Siluetas en el borde del camino. Presencias casi humanas al anochecer.",
+  "Animales erráticos. Ciervos, perros o gatos con conducta imposible.",
+  "Casas que guardan memoria. La presencia parece quedar atrapada en el lugar.",
+  "Bosque como frontera. El monte no es solo paisaje, sino umbral entre mundos.",
+  "Presagios. La aparición anuncia muerte, desgracia o cambio.",
+  "Tradición oral",
+  "Uno de los rasgos más importantes del folklore apalachense es que no siempre depende de una “prueba”, sino de la repetición oral. Un relato puede vivir décadas porque una familia lo cuenta, una iglesia lo recuerda o una comunidad lo integra en su identidad. Eso hace que el valor documental no dependa solo de si “pasó de verdad”, sino de cómo fue conservado.",
+  "En tu app esto puede representarse con una etiqueta como:",
+  "Testimonio directo.",
+  "Relato familiar.",
+  "Tradición comunitaria.",
+  "Recopilación periodística.",
+  "Relectura moderna.",
+  "Cómo presentarlo",
+  "Para que sea útil dentro de una app, te recomiendo que cada ficha tenga una estructura uniforme:",
+  "Nombre del caso o criatura.",
+  "Tipo de fenómeno.",
+  "Lugar exacto o región.",
+  "Época o primera referencia conocida.",
+  "Resumen en 3 a 5 líneas.",
+  "Motivos asociados.",
+  "Nivel de documentación.",
+  "Notas culturales o históricas.",
+  "Ejemplo breve:",
+  "Brown Mountain Lights",
+  "Fenómeno luminoso",
+  "Carolina del Norte",
+  "Avistamientos repetidos durante décadas",
+  "Luces extrañas sobre la montaña, con explicaciones diversas",
+  "Motivos: luz, presagio, misterio, observación nocturna",
+  "Nivel: alto como tradición, incierto como explicación",
+  "Bibliografía base",
+  "Aquí tienes una base mucho más útil para documentar tu app con criterio, separando fuentes académicas, compilaciones de folklore y materiales de contexto histórico. La idea es que no mezcles relatos tradicionales con piezas modernas sin etiquetarlas bien. Para un proyecto serio, conviene tratar cada fuente según su tipo y su nivel de fiabilidad.",
+  "Obras de contexto",
+  "Encyclopedia of Appalachia. Es una referencia general muy útil para historia, cultura y folklore regional.",
+  "Estudios sobre eco-mitología cherokee. Sirven para entender cómo los relatos indígenas no eran simple “terror”, sino conocimiento cultural.",
+  "Compilaciones de folklore apalachense. Te ayudan a ver qué motivos se repiten en distintas zonas y generaciones.",
+  "Folklore y tradición oral",
+  "Relatos de Wampus Cat, Wood Booger, Snallygaster, Snarly Yow y Tailypo.",
+  "Narraciones locales sobre luces errantes, casas embrujadas y presagios nocturnos.",
+  "Testimonios recogidos en comunidades rurales donde las historias se transmiten de forma familiar.",
+  "Casos emblemáticos",
+  "Bell Witch.",
+  "Brown Mountain Lights.",
+  "Mothman.",
+  "Relatos de perros negros espectrales y criaturas del bosque.",
+  "Historias de encuentros con figuras humanas o humanoides en caminos secundarios.",
+  "Cómo ordenar la documentación",
+  "Para que tu aplicación no quede como una lista caótica, te recomiendo separar todo en capas de información. Eso te permitirá mostrar tanto el lado narrativo como el lado documental.",
+  "Capa 1: registro básico",
+  "Incluye nombre, lugar, fecha aproximada, tipo de fenómeno y fuente principal. Esto te da una ficha mínima y consistente para toda entrada.",
+  "Capa 2: clasificación folklórica",
+  "Añade etiquetas como criatura, fantasma, luz, presagio, voz, bosque, casa, camino o tradición indígena. Así podrás cruzar historias parecidas aunque vengan de zonas distintas.",
+  "Capa 3: valor cultural",
+  "Indica si el relato es sagrado, de advertencia, de entretenimiento, de identidad local o de tradición familiar. Esto es importante porque en los Apalaches muchas historias no nacen como “prueba de algo”, sino como memoria comunitaria.",
+  "Capa 4: nivel de certeza",
+  "Puedes usar algo como alto, medio o bajo, pero no para decidir si algo “es real”, sino para decir si existe documentación sólida, tradición oral amplia o solo recreaciones modernas.",
+  "Categorías útiles",
+  "Estas categorías te van a ayudar mucho al construir el contenido:",
+  "Criaturas del bosque.",
+  "Presencias humanas o humanoides.",
+  "Animales imposibles.",
+  "Luces y fenómenos nocturnos.",
+  "Casas y lugares embrujados.",
+  "Presagios y apariciones.",
+  "Relatos indígenas.",
+  "Relatos coloniales.",
+  "Folklore moderno de internet.",
+  "Plantilla de ficha",
+  "Te dejo una plantilla breve que puedes reutilizar para cada entrada:",
+  "Nombre:",
+  "Zona:",
+  "Tipo:",
+  "Primera referencia:",
+  "Resumen:",
+  "Elementos recurrentes:",
+  "Origen del relato:",
+  "Valor cultural:",
+  "Notas:",
+  "Ejemplo:",
+  "Nombre: Brown Mountain Lights.",
+  "Zona: Carolina del Norte.",
+  "Tipo: fenómeno luminoso.",
+  "Primera referencia: tradición de larga duración.",
+  "Resumen: luces extrañas observadas sobre la montaña.",
+  "Elementos recurrentes: luz, noche, misterio, presagio.",
+  "Origen del relato: tradición local y testimonios repetidos.",
+  "Valor cultural: muy alto.",
+  "Notas: conviven explicaciones naturales y sobrenaturales.",
+  "Relatos menores",
+  "Te continúo con un bloque más amplio de motivos y relatos breves, que es justo lo que más sirve para rellenar una app sin perder coherencia. En los Apalaches, muchos casos no son “grandes leyendas” únicas, sino variaciones de unos pocos patrones que se repiten una y otra vez.",
+  "Silbidos en el bosque",
+  "Uno de los motivos más comunes es oír un silbido cerca, como si alguien estuviera llamando o respondiendo desde la maleza. El problema es que casi nunca se ve a la persona, y por eso el relato suele quedar en una mezcla de miedo, desorientación y sensación de presencia. En tu base de datos, esto puede ir como imitación vocal o señuelo sonoro.",
+  "Voz que llama por tu nombre",
+  "Relacionado con lo anterior, muchos relatos describen una voz familiar que llama al testigo desde el bosque, un camino o detrás de la casa. Ese detalle lo vuelve más inquietante porque no parece un ruido cualquiera, sino una reproducción de algo íntimo. Es un motivo muy útil para etiquetar experiencias de “entidad imitadora”.",
+  "Pasos en el ático",
+  "Este es un clásico de casas rurales y granjas antiguas. El testigo oye pasos, arrastre de muebles o golpes arriba, pero al subir no hay nadie. No suele ser espectacular, pero sí muy repetido, y por eso encaja bien en una categoría de actividad doméstica inexplicable.",
+  "Sombra en la ventana",
+  "Muchos relatos rurales hablan de una figura o silueta vista de reojo en una ventana, un granero o una puerta entreabierta. A veces dura un segundo, y el valor del relato está en la ambigüedad: humano, animal o algo intermedio. Para la app, esto encaja bien como aparición liminal.",
+  "Perro negro",
+  "La figura del perro negro aparece mucho en el imaginario anglosajón y apalachense. A veces es un animal espectral; otras, un guardián de cruces de caminos o un presagio de muerte. Es una categoría muy buena porque te permite agrupar historias con variaciones locales.",
+  "Motivos del camino",
+  "En una región tan montañosa, los caminos, senderos y carreteras secundarias son escenarios narrativos fundamentales. No es casualidad: el aislamiento hace que cualquier cosa parezca más real, más cercana y más peligrosa.",
+  "Figura inmóvil",
+  "Un relato frecuente es ver a alguien parado al borde del camino, observando en silencio. La figura puede parecer una persona corriente hasta que el conductor o caminante nota algo fuera de lugar, como altura excesiva, inmovilidad absoluta o ausencia de rostro claro.",
+  "Luz al fondo",
+  "Otra versión muy repetida es seguir una luz que parece una casa, un farol o un vehículo, pero que desaparece al acercarse. Este motivo conecta muy bien con Brown Mountain Lights y con el fuego fatuo, aunque no sea el mismo fenómeno.",
+  "Camino que cambia",
+  "En algunos relatos, el sendero parece alargarse, torcerse o volverse irreconocible. A nivel folklórico, esto funciona como experiencia de desorientación mágica: el espacio conocido deja de obedecer reglas normales.",
+  "Cruces de caminos",
+  "Los cruces de caminos tienen un peso enorme en la tradición popular de muchas regiones del sur, y en los Apalaches eso se mezcla con religión popular, magia protectora y miedo a los lugares de paso.",
+  "Lugar de encuentro",
+  "Un cruce puede ser visto como sitio donde convergen caminos, pero también presencias. Es un espacio intermedio, ni totalmente seguro ni totalmente salvaje. Por eso aparece tanto en relatos de apariciones como en historias de pactos, encuentros nocturnos o señales extrañas.",
+  "Puntos de peligro",
+  "Muchas comunidades trataban los cruces como lugares donde no había que permanecer demasiado tiempo. En la práctica, esto refuerza el relato de que “algo” puede suceder allí con más facilidad que en una casa o en un camino recto.",
+  "Criaturas híbridas",
+  "Una parte muy interesante del folklore apalachense está llena de seres que no encajan del todo en categorías conocidas. Eso los vuelve perfectos para una app que quiera explorar “lo insólito”.",
+  "Humano-animal",
+  "Aquí entran figuras que parecen mezcla de persona y bestia: rostros extraños, piernas demasiado largas, movimientos antinaturales. Este patrón aparece tanto en relatos viejos como en testimonios modernos.",
+  "Búhos extraños",
+  "Los búhos ocupan un lugar especial por su asociación con la noche, la vigilancia y la muerte. En algunas historias no son simplemente aves, sino seres que “observan demasiado” o que parecen llevar intención humana.",
+  "Ciervos anómalos",
+  "El ciervo es uno de los animales más frecuentes en relatos modernos de Appalachia, pero a menudo aparece deformado, inmóvil, con movimientos imposibles o con una mirada que incomoda. Ese tipo de historia está creciendo mucho en el folklore contemporáneo.",
+  "Relatos de advertencia",
+  "Muchas historias apalachenses tienen una función moral o práctica. No se contaban solo para asustar, sino para proteger, educar o imponer prudencia.",
+  "No salir solo de noche",
+  "Es probablemente una de las advertencias más universales de la zona. Bajo esta idea se agrupan desde encuentros con criaturas hasta accidentes, pérdidas y desapariciones.",
+  "No seguir voces",
+  "Este motivo se repite muchísimo porque explica el miedo a que el bosque “responda”. En clave folklórica, la voz es una trampa: parece humana, pero no lo es.",
+  "Respetar ciertos lugares",
+  "Algunos sitios se vuelven tabú por historias previas: cementerios, barrancos, ruinas, cuevas, charcas, cruces o casas abandonadas. Esto ayuda a que el relato sobreviva porque la propia geografía se convierte en archivo de memoria.",
+  "Estructura de tu app",
+  "Si quieres que tu aplicación tenga mucha documentación pero también sea fácil de navegar, esta estructura puede funcionarte muy bien:",
+  "Inicio: mapa o listado general por región.",
+  "Categorías: criaturas, fantasmas, luces, presagios, relatos indígenas, relatos coloniales, relatos modernos.",
+  "Ficha individual: nombre, descripción, zona, motivo, nivel de documentación, notas.",
+  "Relaciones: casos parecidos, variantes locales, relatos relacionados.",
+  "Fuentes: oral, histórica, periodística, moderna, académica.",
+  "Orden recomendado",
+  "Para que no se te vuelva inmanejable, te recomiendo seguir este orden de construcción:",
+  "Casos mayores.",
+  "Criaturas y entidades.",
+  "Motivos repetidos.",
+  "Relatos de casas y caminos.",
+  "Tradiciones indígenas con contexto.",
+  "Folklore moderno de internet.",
+  "Bibliografía y fuentes.",
+  "Carolina del Norte",
+  "Brown Mountain Lights. Fenómeno luminoso recurrente en la zona de Brown Mountain, uno de los misterios más duraderos de la región.",
+  "Grandfather Mountain Ghost Hiker. Relato del “excursionista fantasma” visto en senderos de Grandfather Mountain, con apariciones repetidas durante décadas.",
+  "Valle Crucis Demon Dog. Leyenda del perro demoníaco cerca de la Iglesia Episcopal de San Juan y su cementerio, con testigos modernos que lo describen como enorme y de ojos rojos.",
+  "Mothman-related Appalachian folklore. Aunque Mothman se asocia sobre todo a West Virginia, su presencia en el imaginario apalachense se usa mucho en recopilaciones regionales.",
+  "Tennessee",
+  "Bell Witch. El haunting más famoso del estado y uno de los más documentados del folklore estadounidense.",
+  "Leyendas cherokee del sur de los Apalaches. Relatos sobre el Wampus Cat y otros seres vinculados a la tradición indígena y al bosque.",
+  "Historias de caminos y granjas embrujadas. Tennessee aparece constantemente en compilaciones de relatos rurales con voces, golpes, presencias y casas marcadas por tragedias.",
+  "West Virginia",
+  "Mothman. Caso central del folklore moderno de la región, con testimonios, prensa y enorme proyección cultural.",
+  "Relatos de criaturas del bosque. En compilaciones modernas sobre Apalaches, West Virginia suele concentrar encuentros con humanoides, luces y presencias extrañas.",
+  "Tradición minera y fantasmal. Muchas historias del estado mezclan oscuridad, trabajo subterráneo y apariciones, aunque varían mucho según condado y comunidad.",
+  "Virginia",
+  "Wood Booger. Criatura tipo sasquatch muy asociada al suroeste de Virginia y al folklore del bosque.",
+  "Perro negro y apariciones de camino. Virginia aparece con frecuencia en relatos de animales espectrales y presencias nocturnas en carreteras rurales.",
+  "East Hall / leyendas universitarias. Aunque no es estrictamente un caso “clásico” de montaña, el tipo de relato de dormitorio embrujado es parte del folklore regional moderno.",
+  "Carolina del Sur",
+  "Tradiciones cherokee y relatos del bosque. En la parte apalachense del estado aparecen motivos indígenas, criaturas y advertencias de bosque similares a las de estados vecinos.",
+  "Historias de luces y caminos. Menos icónicas que en Carolina del Norte, pero con el mismo patrón de luces, siluetas y encuentros nocturnos que puedes documentar como variantes regionales.",
+  "Georgia",
+  "Folklore de montaña del norte de Georgia. Comparte muchas de las mismas criaturas y estructuras narrativas del resto del sur apalachense.",
+  "Encuentros con criaturas del bosque. Georgia aparece en recopilaciones modernas de historias extrañas, sobre todo en relatos de senderos y zonas remotas.",
+  "Tradición oral rural. Ideal para añadir entradas de “relato familiar” o “historia de granja” aunque muchas sean de circulación local y no de caso célebre.",
+  "Alabama",
+  "Extremo sur apalachense. En el sector apalachense de Alabama se transmiten relatos similares a los de otros estados: luces, sombras, voces y encuentros en el bosque.",
+  "Motivos de desaparición y desorientación. En compilaciones modernas sobre los Apalaches, Alabama suele encajar en historias de senderismo, aislamiento y miedo rural.",
+  "Folklore indígena y colonial. Útil como zona de transición donde confluyen tradiciones nativas y coloniales.",
+  "Ohio",
+  "Mothman asociado al área apalachense ampliada. Aunque su núcleo es más al oeste, Ohio aparece en relatos y compilaciones como parte del ecosistema legendario relacionado.",
+  "Historias de caminos y bosques. El este de Ohio comparte el tono de relatos de bosques densos, figuras extrañas y superstición rural.",
+  "Relatos de desapariciones y senderismo. Muy útil para una categoría aparte de “casos de excursionistas” o “personas perdidas en montaña”.",
+  "Pensilvania",
+  "Relatos de bosque y criaturas. El sur y este de Pensilvania comparten tradición de críptidos, luces y presencias en rutas rurales.",
+  "Folklore de frontera montañosa. Puedes incluirlo como zona de transición apalachense con historias de caminos, cruces y bosques.",
+  "Historias locales de espectros y casas antiguas. Muy útiles para el bloque de hauntings domésticos.",
+  "Maryland",
+  "Snallygaster. Una de las criaturas más famosas asociadas a la tradición regional de Maryland y alrededores apalachenses.",
+  "Relatos de bestias aéreas o reptilianas. La figura del Snallygaster encaja muy bien en el bloque de criptozoología histórica.",
+  "Folklore fronterizo. Maryland es muy útil para mostrar cómo las leyendas cambian al pasar de una región a otra.",
+  "Nueva York",
+  "Zona apalachense del sur del estado. Comparte relatos de bosques, caminos y presencias extrañas, aunque suele recibir menos atención que el sur.",
+  "Relatos de senderismo y desaparición. Muy útiles como material de “casos modernos” en la cordillera.",
+  "Tradición de historias de luz y camino. Puede añadirse como variante regional del mismo patrón narrativo.",
+  "Mapeo práctico",
+  "Para tu app, esta estructura por estado puede funcionar muy bien:",
+  "Estado.",
+  "Caso o relato.",
+  "Tipo de fenómeno.",
+  "Localidad exacta o zona aproximada.",
+  "Nivel de documentación.",
+  "Etiqueta cultural.",
+  "Relatos relacionados.",
+  "Índice maestro",
+  "Este índice está pensado para que lo uses como columna vertebral de navegación. Incluye criaturas indígenas, figuras regionales, entidades modernas y motivos de horror rural muy repetidos en los Apalaches.",
+  "Wampus Cat. Felino sobrenatural vinculado a tradición cherokee; suele actuar como guardián, castigo o espíritu protector del territorio.",
+  "Ew’ah. Demonio de la locura en relatos cherokee; aparece como entidad de caos mental y origen de la figura del Wampus Cat.",
+  "Spearfinger. Bruja mutaforma cherokee con un dedo-cuchillo; una de las criaturas indígenas más célebres de la región.",
+  "Wood Booger. Críptido humanoide peludo del bosque, equivalente local de bigfoot en varias zonas apalachenses.",
+  "Mothman. Ser alado/presagio, asociado a West Virginia y al folclore moderno de la región.",
+  "Snallygaster. Bestia aérea o reptiliana del folklore regional de Maryland y zonas cercanas.",
+  "Snarly Yow. Perro negro espectral o criatura canina monstruosa, muy usada en relatos de camino.",
+  "Tailypo. Entidad pequeña y vengativa del cuento oral, muy útil para relatos de advertencia.",
+  "Brown Mountain Lights. No es criatura, pero sí una entidad narrativa esencial del misterio apalachense.",
+  "Not deer. Ciervo anómalo de folklore moderno, muy útil para narrativas contemporáneas de internet.",
+  "Skin crawler / skinwalker-style figure. Motivo moderno de humanoide inquietante, muy presente en relatos recientes de Appalachian horror.",
+  "Ghost hiker. Excursionista fantasma, motivo muy común en senderos y montañas.",
+  "Demon dog. Perro infernal o espectral, frecuente en caminos, cementerios y ruinas.",
+  "Watcher figures. Siluetas observadoras, una categoría amplia de apariciones liminales.",
+  "Entity imitator. Presencia que copia voces, silbidos o conductas humanas.",
+  "Catálogo largo de criaturas",
+  "Te dejo ahora un catálogo más amplio con descripciones de una o dos líneas, para que puedas convertirlo directamente en fichas.",
+  "Wampus Cat. Gran felino sobrenatural del sur apalachense; en algunas versiones protege a la comunidad y en otras castiga la imprudencia.",
+  "Ew’ah. Espíritu de locura de tradición cherokee, ligado al sufrimiento mental y al caos.",
+  "Spearfinger. Bruja anciana que cambia de forma y usa un dedo afilado como arma; muy famosa en la tradición cherokee.",
+  "Wood Booger. Humanoide salvaje del bosque, descrito como una variante local de sasquatch.",
+  "Mothman. Figura alada asociada a presagios, avistamientos múltiples y cultura paranormal moderna.",
+  "Snallygaster. Criatura voladora monstruosa, mezcla de dragón y depredador fantástico.",
+  "Snarly Yow. Perro espectral o bestia canina que aparece en caminos rurales y granjas.",
+  "Tailypo. Criatura pequeña, agresiva y vengativa de relatos infantiles y familiares.",
+  "Not deer. Ciervo anómalo con comportamiento antinatural, muy popular en folklore moderno.",
+  "Ghost hiker. Aparición de un caminante o senderista que se presenta y luego desaparece.",
+  "Demon dog. Perro negro o infernal que anuncia desgracia o muerte.",
+  "Black-eyed watcher. Figura humana con ojos oscuros o vacíos, presente en relatos modernos de miedo.",
+  "Skin crawler. Humanoide pálido y desproporcionado, propio de narrativas contemporáneas de terror.",
+  "Big Hoot. Figura asociada a búhos anómalos o seres observadores del bosque; útil como categoría local flexible.",
+  "Forest mimic. Entidad que imita voces y sonidos humanos para atraer al testigo.",
+  "Hollow woman. Aparición femenina asociada a valles, carreteras y granjas abandonadas; útil como arquetipo narrativo.",
+  "Road shadow. Sombra antropomorfa en carretera secundaria, muy frecuente en relatos recientes.",
+  "Crossroads spirit. Entidad de cruce de caminos, asociada a liminalidad y peligro.",
+  "Cemetery child. Presencia infantil en cementerios o junto a iglesias viejas.",
+  "Mine ghost. Fantasma de minería, muy útil para regiones carboníferas de los Apalaches.",
+  "White lady. Aparición femenina de duelo, traición o muerte, extendida en múltiples estados.",
+  "Banshee-like mourner. Figura de lamento o anuncio de muerte, reinterpretada localmente.",
+  "River walker. Ser ligado a ríos, vados y zonas húmedas.",
+  "Cave dweller. Humanoide de cueva, presente en relatos de zonas kársticas y profundas.",
+  "Owl-eyed thing. Presencia de ojos grandes, redondos o brillantes, muy repetida en relatos modernos.",
+  "Tree ape. Homínido del bosque, variante de bigfoot con énfasis regional.",
+  "Mimic voice entity. Presencia no corporal que llama, susurra o responde con voces conocidas.",
+  "Barranca thing. Ser de barranco o precipicio, muy útil como categoría de topografía paranormal.",
+  "Ember lights. Orbes o pequeñas luces cálidas vistas en bosques y laderas.",
+  "Bell-ringer ghost. Fantasma asociado a campanas, iglesias o cementerios.",
+  "Holler man. Figura que grita desde la distancia o la maleza; motivo muy usado en relatos orales.",
+  "Pine hollow thing. Entidad localizada en huecos forestales o valles cerrados.",
+  "Blue-eyed dog. Variante del perro espectral con ojos brillantes.",
+  "Lantern man. Silueta que porta luz y atrae al viajero.",
+  "False child. Apariencia infantil engañosa que no se comporta como niño.",
+  "Old woman in woods. Anciana del bosque, a veces protectora y a veces devoradora.",
+  "Mountain giant. Humanoide enorme vinculado a petroglifos, tradición oral y relatos de “gigantes”.",
+  "Portal being. Categoría moderna para seres que “aparecen” o “viajan” por zonas de montaña.",
+  "Territorial guardian. Criatura protectora del lugar; clave para interpretar muchas leyendas indígenas.",
+  "Casos por estado",
+  "Ahora te dejo una lista más larga por estado, manteniendo foco en relatos concretos o muy citados. Lo presento de forma compacta para que luego puedas expandir cada entrada.",
+  "Carolina del Norte",
+  "Brown Mountain Lights. Luces recurrentes sobre Brown Mountain; uno de los misterios más famosos de la región.",
+  "Grandfather Mountain Ghost Hiker. Excursionista fantasma visto en senderos y miradores de la montaña.",
+  "Valle Crucis Demon Dog. Perro demoníaco o espectral cerca de iglesia y cementerio históricos.",
+  "Wampus Cat en las Blue Ridge. Versión local del felino sobrenatural, ligado a relatos cherokee.",
+  "Luces de camino en Carolina del Norte. Apariciones luminosas en carreteras secundarias y laderas boscosas.",
+  "Historias de cabañas y granjas embrujadas. Muy presentes en tradición rural de montaña.",
+  "Tennessee",
+  "Bell Witch. El haunting más emblemático del estado.",
+  "Relatos cherokee del sur de Appalachia. Entre ellos, versiones del Wampus Cat y espíritus del bosque.",
+  "Casas rurales con actividad poltergeist. Golpes, voces y presencia persistente en granjas aisladas.",
+  "Historias de caminos y cruces. Encuentros extraños en trayectos nocturnos.",
+  "Cementerios con apariciones. Niños fantasmas, mujeres blancas y perros negros.",
+  "West Virginia",
+  "Mothman. El gran caso moderno del estado.",
+  "Encuentros con humanoides del bosque. Muy comunes en relatos contemporáneos.",
+  "Luces y presagios. Fenómenos nocturnos y testimonios de “algo en la colina”.",
+  "Relatos mineros. Fantasmas, voces bajo tierra y presencias en túneles.",
+  "Figura alada o vigilante. Variante narrativa de Mothman y criaturas similares.",
+  "Virginia",
+  "Wood Booger. Críptido regional más característico.",
+  "Historias de carretera rural. Sombras, perros negros y siluetas humanas.",
+  "Apariciones en cementerios de montaña. Relatos recurrentes en zonas históricas y rurales.",
+  "Encuentros con figuras imitadoras. Voces, silbidos y seres que llaman desde el bosque.",
+  "Relatos de zonas boscosas del suroeste. Muy cercanos al folklore de Tennessee y Carolina del Norte.",
+  "Carolina del Sur",
+  "Tradiciones cherokee de montaña. Relatos del bosque, guardianes y advertencias.",
+  "Luces en valles y caminos. Motivo recurrente en compilaciones regionales.",
+  "Casas antiguas con actividad. Espíritus familiares, golpes y sombras.",
+  "Criaturas de los bosques del norte del estado. Versiones locales de humanoides y perros espectrales.",
+  "Relatos de frontera cultural. Mezcla de tradición indígena, colonial y rural.",
+  "Georgia",
+  "Folklore de montaña del norte de Georgia. Muy cercano a Tennessee y Carolina del Norte.",
+  "Encuentros con figuras en senderos. Testigos hablan de presencias al borde del camino.",
+  "Críptidos de bosque. Humanidades peludas, sombras y criaturas que imitan pasos.",
+  "Relatos de casas de familia. Fantasmas y ruidos heredados por generaciones.",
+  "Historias de cruces y barrancos. Lugares liminales cargados de miedo.",
+  "Alabama",
+  "Extremo apalachense de Alabama. Relatos de bosque, luces y desapariciones.",
+  "Presencias en senderos rurales. Muy útiles para casos de “encuentro con lo insólito”.",
+  "Motivos de desorientación. Caminos que parecen cambiar o “dar vueltas”.",
+  "Folklore de transición cultural. Cruce entre narrativas nativas y coloniales.",
+  "Historias locales de granja. Golpes, voces y sombras en casas aisladas.",
+  "Maryland",
+  "Snallygaster. La criatura más famosa de la región en el estado.",
+  "Bestia aérea o reptiliana. Variante histórica del mismo mito.",
+  "Relatos fronterizos apalachenses. Caminos, bosques y pueblos pequeños.",
+  "Apariciones en zonas rurales. Presencias en graneros, barrancos y carreteras.",
+  "Tradición de monstruos locales. Muy útil para el bloque de criptozoología clásica.",
+  "Pensilvania",
+  "Relatos de bosques y senderos. Figuras extrañas y luces en el este del estado.",
+  "Casas viejas y fantasmas familiares. Tradición fuerte en pueblos históricos.",
+  "Apariciones en caminos nocturnos. Sombra, perro negro, mujer blanca.",
+  "Críptidos regionales. Variante de humanoides y bestias del bosque.",
+  "Folklore de transición apalachense. Ideal para conectar Norte y Sur.",
+  "Ohio",
+  "Relatos ligados al imaginario de Mothman. Presencia cultural relacionada con la región.",
+  "Encuentros extraños en bosque y carretera. Historias modernas muy compatibles con tu app.",
+  "Tradición rural de presagios. Lamentos, luces y señales de desgracia.",
+  "Casos de senderistas perdidos. Desorientación y rutas que “cambian”.",
+  "Apariciones humanas o humanoides. Figuras observando desde la línea de árboles.",
+  "Nueva York",
+  "Zona apalachense del sur del estado. Relatos de bosque, luces y sombras.",
+  "Historias de senderismo. Encuentros extraños en rutas remotas.",
+  "Siluetas y voces. Motivo frecuente en relatos modernos.",
+  "Casas y granjas embrujadas. Adaptación local del patrón regional.",
+  "Historias de transición a Nueva Inglaterra. Útil para delimitar frontera folklórica.",
+  "Cómo usarlo en la app",
+  "La forma más eficaz de integrarlo es crear tres niveles de navegación. El primero sería estado; el segundo, categoría; y el tercero, caso o criatura. Con eso puedes mostrar un mapa interactivo y, dentro de cada entrada, ofrecer resumen, etiquetas y enlaces cruzados.",
+  "Te conviene además añadir estas etiquetas:",
+  "Indígena.",
+  "Colonial.",
+  "Rural.",
+  "Moderno.",
+  "Criptozoológico.",
+  "Haunting.",
+  "Luz/Fenómeno.",
+  "Presagio.",
+  "Entidad imitadora.",
+  "Camino/bosque/casa/cementerio.",
+  "Criaturas indígenas y arcaicas",
+  "Uktena. Ser serpentino y poderoso de la tradición cherokee, a menudo descrito como una gran serpiente o dragón con rasgos sobrenaturales. Suele asociarse a peligro, poder ritual y conocimiento antiguo.",
+  "Tsul 'Kalu. Gigante de la tradición cherokee, vinculado a montañas, bosques y fuerzas primordiales. En relatos modernos suele reinterpretarse como guardián del territorio.",
+  "Nunnehi. Pueblo espiritual o “gente invisible” que habita colinas, montañas y lugares apartados. No siempre son hostiles; a veces protegen o ayudan a los humanos.",
+  "Stone Man. Figura pétrea o ser endurecido en relatos regionales, relacionado con castigo o inmovilidad sobrenatural.",
+  "Riverside spirit. Presencia de agua o ribera, a veces benevolente y otras peligrosamente ambigua.",
+  "Críptidos del bosque",
+  "Wood Booger. Humanoide peludo del bosque, equivalente local del sasquatch. Muy útil como criatura-base para encuentros en senderos.",
+  "Tree Walker. Figura alta que parece moverse entre troncos o confundirse con los árboles. Suele aparecer en relatos de bosque profundo.",
+  "Holler Man. Ser que grita o llama desde la distancia, imitando una voz humana con intención de atraer.",
+  "Piney. Variante local de humano salvaje del bosque, usada en varias zonas rurales como nombre genérico de criatura extraña.",
+  "Humpback Beast. Ser encorvado, enorme y de movimientos torpes, asociado a visiones fugaces entre la maleza.",
+  "Perros y bestias negras",
+  "Black Dog. Uno de los motivos más persistentes del folklore apalachense. Puede ser presagio de muerte, guardián espectral o criatura del camino.",
+  "Hellhound. Perro infernal con ojos brillantes, a menudo vinculado a cementerios, cruces de caminos y desgracia.",
+  "Demon Dog. Variante más explícita del perro negro, frecuente en relatos de gente que ve una bestia enorme junto a la carretera.",
+  "Blue-Eyed Hound. Perro espectral con ojos azules o lumínicos, usado como figura de inquietud nocturna.",
+  "Snarly Yow. Perro monstruoso o fantasma canino; muy característico en relatos de camino y granja.",
+  "Entidades imitadoras",
+  "Mimic. Ser que reproduce voces humanas, pasos o sonidos familiares para atraer o confundir.",
+  "Whistler. Presencia cuya firma es el silbido, especialmente en bosques, barrancos o carreteras vacías.",
+  "Caller. Entidad que llama por el nombre del testigo o usa una voz conocida desde la distancia.",
+  "False Child. Aparición infantil que se comporta de forma incorrecta, extraña o antinatural.",
+  "Repeat Voice. Presencia que repite palabras o sonidos con un retraso extraño, como si el lugar “devolviera” la voz.",
+  "Presencias de camino",
+  "Road Shadow. Silueta humana o casi humana vista junto a carreteras secundarias.",
+  "Hitchhiker Ghost. Autoestopista fantasma, muy útil en relatos de tránsito y carreteras de montaña.",
+  "Lantern Man. Figura que porta una luz o parece estar guiando al viajero, a veces con intención engañosa.",
+  "Crossroad Figure. Presencia que aparece en cruces de caminos y desaparece al acercarse.",
+  "Walker in White. Persona vestida de blanco, frecuentemente asociada a muerte, duelo o advertencia.",
+  "Criaturas femeninas",
+  "White Lady. Aparición femenina clásica, ligada a tragedia, luto o muerte violenta.",
+  "Hollow Woman. Mujer espectral o vacía, vinculada a casas abandonadas, valles o caminos.",
+  "Mountain Widow. Figura de viuda solitaria que a veces protege, a veces persigue o se lamenta.",
+  "Old Hag of the Hollow. Bruja o anciana del valle, recurrente en cuentos de advertencia.",
+  "Crying Woman. Presencia cuyo rasgo principal es el llanto nocturno o el lamento lejano.",
+  "Brujas y hechiceras",
+  "Spearfinger. Bruja mutaforma de la tradición cherokee; una de las entidades más fuertes del corpus indígena.",
+  "Mountain Witch. Bruja genérica de montaña, usada en historias de herencia oral y maldiciones.",
+  "Hearth Witch. Bruja doméstica, asociada a cocina, hogar, protección o maleficio.",
+  "Root Woman. Mujer sabia o peligrosa ligada a hierbas, remedios y magia popular.",
+  "Crooked Woman. Figura deformada o doblada, a menudo vieja, hostil y vinculada al bosque.",
+  "Seres de cueva y profundidad",
+  "Cave Dweller. Humanoide de cueva, asociado a túneles, simas y espacios subterráneos.",
+  "Mine Ghost. Fantasma de mina, muy apropiado para regiones carboníferas.",
+  "Deep Hollow Thing. Entidad que habita hondonadas profundas o cañones cerrados.",
+  "Underhill Presence. Ser “bajo la colina”, motivo que mezcla tradición europea y reinterpretación local.",
+  "Tunnel Watcher. Figura observadora asociada a túneles, galerías o pasos excavados.",
+  "Presencias del agua",
+  "River Walker. Ser que aparece cerca de ríos, vados o presas.",
+  "Creek Spirit. Espíritu de arroyo, a veces protector, a veces engañoso.",
+  "Mill Ghost. Fantasma asociado a molinos, compuertas o viejos aserraderos.",
+  "Bog Light. Luz de pantano o humedal, usada para historias de extravío.",
+  "Water Caller. Presencia que se oye cerca del agua y parece invitar a acercarse.",
+  "Figuras de presagio",
+  "Mothman. La entidad de presagio más famosa del conjunto apalachense.",
+  "Owl Man. Hombre-búho o figura con rasgos aviares, normalmente asociada a observación y mala fortuna.",
+  "Death Walker. Aparición vinculada a la proximidad de una muerte.",
+  "Bell Ringer Ghost. Fantasma de campana o anuncio fúnebre.",
+  "Red-Eyed Sign. Presencia de ojos rojos, casi siempre asociada a amenaza.",
+  "Seres modernos de internet",
+  "Not Deer. Ciervo imposible, deformado o con conducta antinatural. Es una de las criaturas modernas más útiles para horror digital.",
+  "Deer Woman. Figura híbrida moderna con raíces indígenas reinterpretadas en internet y folklore contemporáneo.",
+  "Skinwalker-style entity. Categoría moderna de ser imitador, muy difundida en narrativas de terror online.",
+  "Backwoods Thing. Criatura genérica de “los montes”, usada en relatos modernos de miedo.",
+  "Pale Crawler. Ser pálido y delgado, muy común en narrativas contemporáneas de Appalachia horror.",
+  "Entidades ambiguas",
+  "Watcher. Presencia que solo observa desde lejos, detrás de árboles o en ventanas.",
+  "Shadow Person. Sombra con forma humana, recurrente en casas, carreteras y graneros.",
+  "Edge Walker. Ser que se mueve en el borde de lo visible, como si existiera entre dos planos.",
+  "Hollow Presence. Presencia vacía o sin rasgos claros, más sentida que vista.",
+  "Unnamed Thing. Entidad sin nombre fijo, presente en relatos donde el miedo nace precisamente de no poder clasificarla.",
+  "Cómo seguir ampliando",
+  "Si quieres mantener el catálogo útil para desarrollo, lo mejor es seguir con un sistema de capas:",
+  "Nombre de la entidad.",
+  "Tipo.",
+  "Origen cultural.",
+  "Zona de aparición.",
+  "Comportamiento.",
+  "Nivel de rareza.",
+  "Relatos asociados.",
+  "También conviene separar entre:",
+  "Tradición indígena auténtica.",
+  "Folklore colonial y rural.",
+  "Criptozoología popular.",
+  "Horror moderno de internet.",
+  "West Virginia",
+  "Mothman. El caso más emblemático del estado: criatura alada vista en Point Pleasant en los años 60, asociada a presagio y a una cadena de testimonios modernos.",
+  "Flatwoods Monster. Aparición de 1952 en Flatwoods; uno de los casos UFO/cryptid más famosos del estado.",
+  "Greenbrier Ghost. Zona de Greenbrier y la historia de Zona Heaster Shue, uno de los relatos sobrenaturales más conocidos de Appalachia.",
+  "Moon-eyed people. Pueblo misterioso de tradición antigua mencionado en folklore regional y compilaciones apalachenses.",
+  "Phantom miner of Wise County. Fantasma de un minero con lámpara en zonas de carbón y minas abandonadas.",
+  "Falling Rock/railroad legends. Relatos de túneles, vías y accidentes en zonas ferroviarias montañosas.",
+  "Harpers Ferry ghost stories. La ciudad concentra historias de guerra, apariciones y casas antiguas.",
+  "Backroads humanoids. Encuentros modernos con figuras al borde de carreteras secundarias.",
+  "North Carolina",
+  "Brown Mountain Lights. El gran misterio luminoso del estado, repetido durante décadas.",
+  "Devil’s Tramping Ground. Lugar circular donde supuestamente nada crece y el diablo camina por la noche.",
+  "Valle Crucis Demon Dog. Perro demoníaco cerca de iglesia y cementerio históricos.",
+  "Grandfather Mountain Ghost Hiker. Senderista fantasma recurrente en relatos locales.",
+  "Devil’s Courthouse. Peñón y cueva con una fuerte leyenda oscura asociada.",
+  "Noland Creek Trail / Road to Nowhere. Zona muy cargada de relatos de apariciones y caminantes perdidos.",
+  "Wampus Cat en Blue Ridge. Versión felina del folklore cherokee y rural.",
+  "Luces en Linville Gorge. Orbes y luces misteriosas en barrancos y crestas.",
+  "Cabins y homestead hauntings. Viejas casas de montaña con actividad de presencia.",
+  "Roadside figures. Apariciones de camino, autoestopistas fantasmas y sombras.",
+  "Tennessee",
+  "Bell Witch. El haunting más famoso del estado y uno de los más documentados de Estados Unidos.",
+  "Roaring Fork ghost Lucy. Fantasma asociado al Roaring Fork Motor Trail en Gatlinburg.",
+  "Old Trinity Episcopal Church. Iglesia histórica de Mason con tradición de apariciones.",
+  "Mountainside voices and knocks. Relatos de golpes, susurros y presencias en zonas rurales.",
+  "Cherokee mountain beings. Tradiciones de Wampus Cat y seres del bosque.",
+  "Backroad hitchhiker ghosts. Autoestopistas espectrales en carreteras secundarias.",
+  "Cemetery lights and child spirits. Apariciones en cementerios, muy comunes en folklore local.",
+  "Cabin hauntings. Casas de madera y granjas con actividad persistente.",
+  "Virginia",
+  "Nickerson-Sneed House. Casa histórica de Glade Spring con historia de guerra y fantasmas.",
+  "Wood Booger. El críptido local más característico.",
+  "Wise County mine ghost. Fantasma minero de lámpara en el cinturón carbonífero.",
+  "Backwoods demon dog. Perros negros o demoníacos en caminos de montaña.",
+  "Blue Ridge apparitions. Figuras vistas en senderos y caminos altos.",
+  "Civil War ghosts. Fantasmas de soldados y casas marcadas por la guerra.",
+  "Hollow women and old hag stories. Mujeres fantasma, brujas de valle y presencias domésticas.",
+  "Road shadow sightings. Siluetas humanas en la carretera y en bordes de bosque.",
+  "Georgia",
+  "Blue Ridge creatures. Encuentros con humanoides y figuras extrañas en la zona montañosa del norte.",
+  "Ole Green Eyes. Leyenda asociada a historias de la Guerra Civil y el sur rural.",
+  "Cherokee mountain folklore. Seres y advertencias del bosque.",
+  "Backwoods stalkers. Entidades observadoras en carreteras y senderos.",
+  "House hauntings. Granjas y viviendas antiguas con golpes, voces y sombras.",
+  "Hollow road apparitions. Figuras vistas en valles y caminos nocturnos.",
+  "Bigfoot-style encounters. Relatos de humanoides grandes en bosque profundo.",
+  "River and creek spirits. Presencias ligadas al agua y a vados montañosos.",
+  "Kentucky",
+  "Moon-eyed people. Una de las tradiciones más antiguas y persistentes del área apalachense ampliada.",
+  "Witch-hollow stories. Brujas, ancianas del bosque y presencias de valle.",
+  "Cumberland backroad apparitions. Apariciones de carretera en zonas remotas.",
+  "Bigfoot / wild man reports. Relatos de hombre salvaje y humanoides del bosque.",
+  "Mine-camp ghosts. Fantasmas de campamentos mineros y pueblos abandonados.",
+  "Riverbank lights. Luces extrañas en riberas y humedales.",
+  "Headless or faceless figures. Apariciones de silueta humana sin rostro.",
+  "Old family curse stories. Historias de maldiciones domésticas y linajes marcados.",
+  "Pennsylvania",
+  "Centralia. Pueblo marcado por el incendio subterráneo que nunca se extinguió; caso real con enorme carga legendaria.",
+  "Appalachian backwoods sightings. Figuras extrañas y relatos de bosque en el sur y este del estado.",
+  "Mine-fire hauntings. Fantasmas y presencias en torno a minas, humo y abandono.",
+  "Old church apparitions. Iglesias rurales y cementerios con relatos de sombras.",
+  "Roadside ghost legends. Autoestopistas, mujeres blancas y figuras en carreteras.",
+  "Creature reports. Apariciones de humanoides y perros negros en la periferia montañosa.",
+  "Hollow whistle stories. Silbidos y voces en valles profundos.",
+  "Family lore hauntings. Historias heredadas por familias de origen rural.",
+  "Maryland",
+  "Snallygaster. El gran monstruo volador del folklore local.",
+  "Coffin Rock. Lugar de fuerte carga legendaria y asociado al imaginario de Blair Witch.",
+  "Rural road apparitions. Caminos con sombras, luces y figuras humanas.",
+  "Haunted bridges. Puentes con relatos de accidentes, fantasmas y apariciones.",
+  "Farm ghost stories. Granjas embrujadas y relatos de viejas casas.",
+  "Mountain-border folklore. Versiones locales de criaturas de bosque y perro negro.",
+  "Trail lights. Luces de sendero y orbes en zonas arboladas.",
+  "Old quarry legends. Canteras, cuevas y zonas excavadas con historias extrañas.",
+  "Ohio",
+  "Moonville Tunnel. Túnel ferroviario con historias de pasos, voces y apariciones.",
+  "Mothman-related folklore. La presencia de Mothman se extiende al imaginario regional.",
+  "Coal and rail ghosts. Fantasmas asociados a ferrocarril y minería.",
+  "Backroad humanoids. Figuras extrañas en bosques y carreteras secundarias.",
+  "Hitchhiker legends. Autoestopistas fantasma y viajeros que desaparecen.",
+  "River valley lights. Luces en valles y márgenes del río.",
+  "Old town hauntings. Casas y edificios históricos con actividad.",
+  "Forest silhouettes. Sombras humanas o casi humanas en la línea de árboles.",
+  "New York",
+  "Southern Adirondack / Appalachian border sightings. Relatos de bosque y humanoides en la franja apalachense del sur del estado.",
+  "Roadside figures. Apariciones en carreteras rurales.",
+  "Ghost hiker stories. Senderistas fantasmas y caminantes perdidos.",
+  "Old farmhouse hauntings. Casas de campo con actividad poltergeist.",
+  "Woodland lights. Orbes, luces y puntos móviles en bosque.",
+  "Mountain shadow beings. Figuras altas, oscuras y poco definidas.",
+  "Family curse tales. Historias domésticas de maldición y linaje.",
+  "River and ridge legends. Relatos del agua, la colina y el borde del bosque.",
+  "Alabama",
+  "North Alabama mountain folklore. Relatos de luces, sombras y presencias en la parte apalachense del estado.",
+  "Roadless woods encounters. Encuentros en áreas remotas y poco transitadas.",
+  "Cabin hauntings. Granjas y cabañas con ruidos y apariciones.",
+  "Blind bend stories. Curvas ciegas y presencias de camino.",
+  "Forest caller legends. Voces que llaman o silban desde la maleza.",
+  "River bluff spirits. Presencias junto a acantilados y cursos de agua.",
+  "Old mill ghosts. Fantasmas de molinos, aserraderos y lugares de trabajo.",
+  "Backwoods curse lore. Maldiciones de familia, tierra o casa.",
+  "South Carolina",
+  "Upstate Cherokee folklore. Narrativas del bosque y guardianes del territorio.",
+  "Mountain road lights. Luces anómalas en caminos elevados.",
+  "Farmhouse hauntings. Casos de actividad en viviendas antiguas.",
+  "Forest watcher figures. Entidades observadoras en linde de bosque.",
+  "Creek spirit stories. Espíritus de arroyos y vados.",
+  "Demon dog variants. Perros negros o infernales en carreteras secundarias.",
+  "Old cemetery apparitions. Apariciones en cementerios rurales.",
+  "Hollow folk tales. Gente del valle, sombras y mujeres blancas.",
+  "West/Deep regional overlaps",
+  "Moon-eyed people. Tradición amplia que aparece en varias zonas apalachenses.",
+  "Bigfoot / wild man reports. Variantes regionales distribuidas por muchas fronteras estatales.",
+  "White lady stories. Apariciones femeninas en puentes, casas y caminos.",
+  "Perro negro. Uno de los motivos más persistentes y extensos de toda la cordillera.",
+  "Mimic voices. Relatos de entidades que imitan voces humanas.",
+  "Mine ghosts. Fantasmas de minería, clave en estados con pasado carbonífero.",
+  "Orbs and trail lights. Fenómenos luminosos repetidos en bosques y cumbres.",
+  "Road shadows and hitchhikers. Apariciones de carretera, muy comunes en todo el arco apalachense.",
+  "Estructura de archivo",
+  "Para convertir esto en un archivo grande, te conviene usar esta base:",
+  "Estado.",
+  "Nombre del caso o criatura.",
+  "Tipo.",
+  "Municipio/condado/zona.",
+  "Breve resumen.",
+  "Motivo folklórico.",
+  "Origen cultural.",
+  "Nivel de documentación.",
+  "Relatos relacionados."
+];
+
+let G = {
+  night: 1,
+  phase: 'day', // 'day' | 'night'
+  dayActionsLeft: 4,
+  player: { health: 100, sanity: 80, water: 80, food: 80, stamina: 100 },
+  shelter: 0, // 0=intemperie,1=suelo,2=seto,3=tienda,4=cabaña,5=refugio
+  inventory: [],
+  statuses: [],
+  lore: [],
+  flags: {},
+  log: [],
+  deathMsg: ''
+};
+
+const SHELTER_NAMES = ['Intemperie','Suelo improvisado','Seto improvisado','Tienda de campaña','Cabaña improvisada','Refugio avanzado'];
+const SHELTER_ICONS = ['🌲','🍂','🌿','⛺','🪵','🏚️'];
+const SHELTER_DEFENSE = [0,5,15,35,60,85];
+
+// ── Items ──
+const ITEMS = {
+  agua:        { name:'Agua',       icon:'💧', max:3, effect:'Restaura hidratación.',  type:'consumable' },
+  comida:      { name:'Comida',     icon:'🥫', max:3, effect:'Restaura energía.',      type:'consumable' },
+  vendaje:     { name:'Vendaje',    icon:'🩹', max:2, effect:'Cura heridas menores.',  type:'consumable' },
+  linterna:    { name:'Linterna',   icon:'🔦', max:1, effect:'Ilumina la noche. Atrae cosas.', type:'tool' },
+  pilas:       { name:'Pilas',      icon:'🔋', max:2, effect:'Carga la linterna.',     type:'consumable' },
+  cuerda:      { name:'Cuerda',     icon:'🪢', max:1, effect:'Útil en construcción.',  type:'material' },
+  madera:      { name:'Madera',     icon:'🪵', max:3, effect:'Construir y calentar.',  type:'material' },
+  navaja:      { name:'Navaja',     icon:'🔪', max:1, effect:'Herramienta polivalente.', type:'tool' },
+  brujula:     { name:'Brújula',    icon:'🧭', max:1, effect:'No te pierdas.',         type:'tool' },
+  antidoto:    { name:'Antídoto',   icon:'💊', max:2, effect:'Cura veneno o infección.', type:'consumable' },
+  nota_vieja:  { name:'Nota hallada', icon:'📄', max:1, effect:'Una nota de alguien que estuvo aquí.', type:'lore' },
+  diario:      { name:'Diario roto', icon:'📓', max:1, effect:'Páginas arrancadas, escritura febril.', type:'lore' },
+  piedra_rara: { name:'Piedra rara', icon:'🪨', max:1, effect:'Tallada con símbolos que no reconoces.', type:'anomaly' },
+  plumas:      { name:'Plumas negras',icon:'🪶',max:2, effect:'Demasiado grandes para ser de pájaro.', type:'anomaly' },
+  sal:         { name:'Sal',        icon:'🧂', max:1, effect:'Dicen que aleja ciertas cosas.', type:'tool' },
+  tela:        { name:'Tela',       icon:'🧵', max:2, effect:'Vendaje, aislante o camuflaje.', type:'material' },
+  bayas:       { name:'Bayas',      icon:'🫐', max:2, effect:'Comida silvestre. Puede que no sean todas seguras.', type:'consumable' },
+  grabadora:   { name:'Grabadora',  icon:'📻', max:1, effect:'¿Grabaste algo anoche?', type:'tool' },
+  mapa_parcial:{ name:'Mapa parcial',icon:'🗺️', max:1, effect:'Fragmento de un mapa más grande.', type:'lore' },
+  repelente:   { name:'Repelente',  icon:'🧴', max:1, effect:'Protege de insectos… y quizás de algo más.', type:'tool' },
+};
+
+// ── Day Actions ──
+const DAY_ACTIONS = [
+  {
+    id:'explore', icon:'🌲', name:'Explorar', desc:'Adentrarte en el bosque a buscar recursos.',
+    cost: { stamina: 20, sanity: -5 },
+    fn: doExplore
+  },
+  {
+    id:'build', icon:'🪵', name:'Construir', desc:'Mejorar tu refugio con materiales.',
+    cost: { stamina: 25 },
+    fn: doBuild
+  },
+  {
+    id:'rest', icon:'🌿', name:'Descansar', desc:'Recupera energía y estabiliza la mente.',
+    cost: { stamina: -25, sanity: -10 },
+    fn: doRest
+  },
+  {
+    id:'water', icon:'💧', name:'Buscar agua', desc:'Localizar una fuente de agua potable.',
+    cost: { stamina: 15 },
+    fn: doWater
+  },
+  {
+    id:'forage', icon:'🫐', name:'Forrajear', desc:'Buscar comida en el entorno.',
+    cost: { stamina: 20 },
+    fn: doForage
+  },
+  {
+    id:'investigate', icon:'🔍', name:'Investigar', desc:'Examinar marcas extrañas y huellas.',
+    cost: { stamina: 15, sanity: -8 },
+    fn: doInvestigate
+  },
+  {
+    id:'meditate', icon:'🧘', name:'Serenarse', desc:'Técnicas de control mental. Gana cordura.',
+    cost: { stamina: 10, sanity: -20 },
+    fn: doMeditate
+  },
+  {
+    id:'craft', icon:'🔧', name:'Artesanía', desc:'Crear herramientas con materiales hallados.',
+    cost: { stamina: 20 },
+    fn: doCraft
+  },
+];
+
+// ── Night Events ──
+const NIGHT_EVENTS = [
+  {
+    id:'whispers', minNight:1,
+    title:'Los susurros',
+    text:'Algo te llama por tu nombre desde la oscuridad del bosque. La voz suena exactamente como alguien que conoces. Hay una pausa expectante, como si esperase respuesta.',
+    choices:[
+      { text:'Responder. Quizás hay alguien en apuros.', outcome:'bad', delta:{sanity:-20,health:-15}, msg:'Te acercas. La voz se apaga. Al regresar al refugio, algo ha cambiado dentro. No sabes qué.' },
+      { text:'Ignorarlo. Meterte más adentro del refugio.', outcome:'neutral', delta:{sanity:-5}, msg:'La voz cesa eventualmente. Pero esa noche sueñas con ella.' },
+      { text:'Trazar una línea de sal en el umbral.', outcome:'good', delta:{sanity:8}, msg:'El susurro retrocede de inmediato. En la tradición local, la sal disuade a los imitadores.', requires:'sal' },
+      { text:'Grabar con la grabadora para escucharlo mañana.', outcome:'neutral', delta:{sanity:-8}, msg:'Por la mañana escuchas la grabación. Tu voz responde sola en la cinta. No recuerdas haber hablado.', requires:'grabadora', lore:'Grabación anómala: la cinta registró una respuesta tuya que no recuerdas haber dado.' },
+    ]
+  },
+  {
+    id:'figure', minNight:1,
+    title:'La figura inmóvil',
+    text:'Una silueta al borde del bosque. Lleva horas sin moverse. A diferencia de un animal, no hace ningún sonido. Demasiado alta para ser un ciervo. Demasiado quieta para ser humana.',
+    choices:[
+      { text:'Acercarte con la linterna a investigar.', outcome:'bad', delta:{sanity:-25,health:-20}, msg:'La figura desaparece antes de que llegues. Las huellas en el barro no pertenecen a ningún animal que reconozcas.', requires:'linterna' },
+      { text:'Observar en completo silencio. Sin moverte.', outcome:'neutral', delta:{sanity:-15}, msg:'Con el primer indicio de amanecer, desaparece. No sabías que podías contener la respiración tanto tiempo.' },
+      { text:'Hacer ruido fuerte para espantarla.', outcome:'bad', delta:{sanity:-20,health:-10}, msg:'Giras la cabeza un momento. Cuando vuelves a mirar, la figura está más cerca. No la viste moverse.' },
+      { text:'Buscar referencia en el diario hallado.', outcome:'good', delta:{sanity:8}, msg:'"Watcher figures — observan, no atacan mientras no te acerques. Ignorar, no mirar fijamente, esperar."', requires:'diario' },
+    ]
+  },
+  {
+    id:'knock', minNight:2,
+    title:'Los tres golpes',
+    text:'Tres golpes en la pared de tu refugio. Pausa. Tres golpes más. El patrón es demasiado deliberado para ser un animal.',
+    choices:[
+      { text:'Abrir para ver qué es.', outcome:'bad', delta:{health:-30,sanity:-20}, msg:'Afuera no hay nada. Pero algo entró mientras mirabas hacia fuera. Lo notas en el frío repentino.' },
+      { text:'Responder con tres golpes desde dentro.', outcome:'bad', delta:{sanity:-30}, msg:'Los golpes se multiplican. Vienen ahora de todas las paredes. Aprendiste algo que no olvidarás: no respondas.' },
+      { text:'Esperar completamente inmóvil hasta el amanecer.', outcome:'good', delta:{sanity:-10}, msg:'Cesa después de una hora. Por la mañana encuentras marcas arañadas en la madera exterior.' },
+      { text:'Reforzar la entrada apilando madera contra ella.', outcome:'good', delta:{sanity:5,health:5}, msg:'La estructura aguanta. Los golpes cesan antes. La solidez del refugio importa.', requires:'madera' },
+    ]
+  },
+  {
+    id:'lights', minNight:2,
+    title:'Las luces de Brown Mountain',
+    text:'Tres puntos de luz naranja-blanca sobre la cresta boscosa. Se mueven en triángulo, lentos y deliberados. Llevan registrándose en esta región desde hace más de un siglo.',
+    choices:[
+      { text:'Seguirlas. Pueden llevar a algo revelador.', outcome:'bad', delta:{sanity:-35,health:-20}, msg:'Caminas durante horas. Al volver en ti, estás lejos del refugio. No recuerdas el trayecto.', lore:'Pérdida de tiempo: seguiste las luces y perdiste horas sin recuerdo. Patrón documentado.' },
+      { text:'Cerrar los ojos. No mirarlas.', outcome:'neutral', delta:{sanity:-5}, msg:'Cuando las abres, las luces se han ido. El bosque en calma aparente.' },
+      { text:'Documentar el patrón en el mapa.', outcome:'good', delta:{sanity:12}, msg:'El patrón triangular encaja con avistamientos registrados por décadas. Saber qué es reduce el miedo.', requires:'mapa_parcial', lore:'Brown Mountain: patrón triangular documentado. Aparece principalmente en noches sin viento.' },
+      { text:'Ignorarlas. Probablemente tienen explicación natural.', outcome:'neutral', delta:{sanity:-12}, msg:'Pasas horas convenciéndote. No funciona del todo. El movimiento era demasiado intencional.' },
+    ]
+  },
+  {
+    id:'deer', minNight:1,
+    title:'El not-deer',
+    text:'Un ciervo en el claro. Pero la cabeza está girada hacia ti en un ángulo imposible. Se mueve a sacudidas, como un archivo de vídeo corrupto. Sus ojos no reflejan la luz de la luna.',
+    choices:[
+      { text:'Acercarte despacio. Puede estar herido.', outcome:'bad', delta:{health:-25,sanity:-25}, msg:'Se gira completamente hacia ti. Tiene demasiadas articulaciones. Corres sin mirar atrás.' },
+      { text:'Quedarte completamente quieto y observar.', outcome:'neutral', delta:{sanity:-12}, msg:'Se va eventualmente. Pero en el lugar donde estaba parado no hay huellas en el suelo.' },
+      { text:'Consultar la nota sobre fauna anómala.', outcome:'good', delta:{sanity:8}, msg:'"Not deer. No hagas contacto visual sostenido. Retrocede lento, sin correr. No demuestres miedo."', requires:'nota_vieja' },
+      { text:'Intentar ahuyentarlo con ruido fuerte.', outcome:'bad', delta:{sanity:-22,health:-12}, msg:'El ciervo no se asusta. Se gira despacio. Su boca se abre más de lo anatómicamente posible.' },
+    ]
+  },
+  {
+    id:'voice_name', minNight:3,
+    title:'Tu nombre en el bosque',
+    text:'Una voz. Perfectamente familiar. Tu nombre pronunciado con la entonación exacta de alguien cercano. Viene de entre los árboles, a unos veinte metros. No hay nadie en estos Apalaches que te conozca.',
+    choices:[
+      { text:'"¿Quién eres? ¿Qué quieres?"', outcome:'bad', delta:{sanity:-28,health:-15}, msg:'La voz responde con tu nombre. Y luego con el nombre de alguien que no has mencionado a nadie.' },
+      { text:'Silencio absoluto. No emitir ningún sonido.', outcome:'good', delta:{sanity:-5}, msg:'Las entidades imitadoras necesitan respuesta para localizarte con precisión. El silencio las confunde.' },
+      { text:'Encender la linterna hacia el sonido.', outcome:'bad', delta:{sanity:-22,health:-18}, msg:'Ves algo brevemente antes de apagar la linterna. Lo que viste no encaja con ninguna categoría conocida.', requires:'linterna' },
+      { text:'Repetir en voz alta los nombres de personas reales.', outcome:'neutral', delta:{sanity:-10}, msg:'La voz intenta imitar cada nombre que dices. Eventualmente cesa, como si se hubiera aburrido.' },
+    ]
+  },
+  {
+    id:'smell', minNight:3,
+    title:'El olor a ceniza',
+    text:'Huele a madera quemada sin fuente visible. El olor se intensifica desde el norte. En el folklore local, este olor precede siempre a una presencia. Nunca al fuego.',
+    choices:[
+      { text:'Preparar el refugio y esperar dentro.', outcome:'neutral', delta:{sanity:-10}, msg:'La presencia rodea el perímetro durante horas. No entra. Esta noche.' },
+      { text:'Encender tu propio fuego. Dominar el olor.', outcome:'good', delta:{sanity:8,health:5}, msg:'El fuego propio parece confundirla o disuadirla. Se aleja sin cruzar el perímetro iluminado.', requires:'madera' },
+      { text:'Salir a investigar el origen del olor.', outcome:'bad', delta:{health:-30,sanity:-32}, msg:'No encuentras fuente. Pero cuando regresas al refugio, algo te siguió de vuelta al interior.' },
+      { text:'Recordar lo que indica el diario.', outcome:'good', delta:{sanity:12}, msg:'"Olor a quemado sin fuente: centro del refugio, no mirar hacia el norte, esperar en calma. Siempre cesa."', requires:'diario' },
+    ]
+  },
+  {
+    id:'snake', minNight:1,
+    title:'La mordedura',
+    text:'Al moverse en la oscuridad del refugio, algo te muerde en el tobillo. El dolor se extiende hacia la rodilla con rapidez. Serpiente de cobre o de cascabel, en estas montañas hay ambas.',
+    choices:[
+      { text:'Usar el antídoto inmediatamente.', outcome:'good', delta:{health:12,sanity:5}, msg:'Actúas con rapidez. El veneno se neutraliza antes de causar daño sistémico grave.', requires:'antidoto' },
+      { text:'Limpiar y vendarte la herida con cuidado.', outcome:'neutral', delta:{health:-18}, msg:'Controlas la hemorragia. El veneno era leve o no penetró profundo. Tendrás fiebre mañana.', requires:'vendaje' },
+      { text:'Ignorarlo. Seguramente no era venenosa.', outcome:'bad', delta:{health:-42,sanity:-15}, msg:'Era una serpiente de cobre. La fiebre sube. Pierdes el conocimiento brevemente a la mañana.' },
+      { text:'Gritar pidiendo ayuda al exterior.', outcome:'bad', delta:{sanity:-28,health:-15}, msg:'Nadie que pueda ayudarte escuchó. Pero algo en el bosque sí respondió al sonido.' },
+    ]
+  },
+  {
+    id:'bell_witch', minNight:5,
+    title:'La presencia Bell',
+    text:'Golpes rítmicos en intervalos de tres. Una voz femenina murmura exactamente bajo el suelo donde estás. Sientes que el aire se espesa. La entidad Bell lleva dos siglos en estos territorios.',
+    choices:[
+      { text:'Hablar con la presencia. Negociar.', outcome:'bad', delta:{sanity:-38,health:-10}, msg:'Responde. Te hace preguntas sobre personas que no mencionaste. Sabe cosas.' },
+      { text:'Rezar o recitar algo repetidamente en voz alta.', outcome:'neutral', delta:{sanity:-10}, msg:'La intensidad baja. La presencia no desaparece, pero retrocede al exterior.' },
+      { text:'Salir al exterior. Romper el contacto físico con el suelo.', outcome:'good', delta:{sanity:-10,health:-5}, msg:'Afuera hay frío pero la presencia no te sigue fuera del refugio. El exterior no es su dominio.' },
+      { text:'Leer en voz alta el pasaje sobre la Bell Witch.', outcome:'good', delta:{sanity:18}, msg:'"No respondas preguntas. No negocies. El exterior es más seguro que el interior durante una visita activa."', requires:'diario' },
+    ]
+  },
+  {
+    id:'wampus', minNight:4,
+    title:'El Wampus Cat',
+    text:'Oyes un felino. Enorme, cercano. Luego el sonido cambia: deja de ser completamente animal. En la tradición cherokee, el Wampus Cat es castigo y guardián simultáneamente.',
+    choices:[
+      { text:'Quedarte completamente inmóvil y en silencio.', outcome:'good', delta:{sanity:-10}, msg:'Los grandes felinos responden al movimiento. Pasa rozando el refugio sin atacar. Esta vez.' },
+      { text:'Encender fuego en la entrada del refugio.', outcome:'good', delta:{health:5,sanity:8}, msg:'Las llamas lo mantienen a distancia. El fuego tiene una relación antigua con lo que ronda en la oscuridad.', requires:'madera' },
+      { text:'Correr al refugio y cerrar la entrada.', outcome:'neutral', delta:{sanity:-18,health:-10}, msg:'Llegas al refugio. A la mañana hay rasguños profundos en la madera de la entrada.' },
+      { text:'Salir a enfrentarlo con la navaja.', outcome:'bad', delta:{health:-48,sanity:-22}, msg:'La navaja no está pensada para esto. El Wampus Cat no es una criatura ordinaria.', requires:'navaja' },
+    ]
+  },
+  {
+    id:'mothman', minNight:8,
+    title:'El observador alado',
+    text:'Algo enorme en la oscuridad sobre el dosel arbóreo. No hace sonido al volar. Dos puntos rojos, fijos, a unos doce metros de altura, orientados directamente hacia ti. No se mueve.',
+    choices:[
+      { text:'Encender la linterna hacia él.', outcome:'bad', delta:{sanity:-35,health:-15}, msg:'Los puntos rojos se intensifican. Cuando apagas la linterna, ya no están. Pero sientes que siguen ahí.', requires:'linterna' },
+      { text:'Entrar al refugio sin hacer movimientos bruscos.', outcome:'good', delta:{sanity:-12}, msg:'La criatura no sigue. En el folklore, el Mothman observa, presagia, pero raramente actúa.' },
+      { text:'Quedarte mirando los ojos rojos fijamente.', outcome:'bad', delta:{sanity:-42}, msg:'Pierdes la noción del tiempo. Cuando reaccionas han pasado dos horas. No recuerdas nada.' },
+      { text:'Registrar en el mapa la posición del avistamiento.', outcome:'good', delta:{sanity:10}, msg:'Documentas la dirección. Los avistamientos del Mothman históricamente preceden eventos, no los causan.', requires:'mapa_parcial', lore:'Mothman avistado al noreste. Folklore: presagio, no amenaza directa. Pero siempre llega antes de algo.' },
+    ]
+  },
+  {
+    id:'snarlyyow', minNight:5,
+    title:'El Snarly Yow',
+    text:'Un perro negro enorme en el camino de acceso. Ojos que capturan la luz como espejos. No gruñe. No se mueve. Solo mira. El Snarly Yow es uno de los perros espectrales más documentados de los Apalaches.',
+    choices:[
+      { text:'Intentar pasar a su lado hacia el refugio.', outcome:'bad', delta:{health:-28,sanity:-20}, msg:'Te bloquea. Cuando tratas de rodearlo, aparece en el otro lado. Al final simplemente cierras los ojos y caminas.' },
+      { text:'Detenerte y no hacer contacto visual.', outcome:'good', delta:{sanity:-8}, msg:'Sin contacto visual directo, el perro espectral pierde interés. Los guardianes espectrales no atacan lo que los ignora.' },
+      { text:'Tirarle comida para distraerlo.', outcome:'neutral', delta:{sanity:-15}, msg:'La comida atraviesa al animal como si no existiera. No es un perro real. Te alejas lentamente.' },
+      { text:'Encender la linterna directamente sobre él.', outcome:'bad', delta:{sanity:-30,health:-18}, msg:'La luz lo hace más visible, no menos. Sus proporciones no cuadran con ningún animal real.', requires:'linterna' },
+    ]
+  },
+  {
+    id:'spearfinger', minNight:10,
+    title:'La anciana del bosque',
+    text:'Una anciana en el perímetro del refugio. Pide ayuda, dice estar perdida. Pero sus movimientos son levemente erróneos. Su voz cambia sutilmente de timbre entre frases. Spearfinger, la bruja mutaforma cherokee, siempre adopta la apariencia de algo inofensivo.',
+    choices:[
+      { text:'Salir a ayudarla. Puede ser una persona real.', outcome:'bad', delta:{health:-55,sanity:-30}, msg:'No era una persona real. Lo que tomó por una anciana llevaba décadas esperando que alguien saliera.' },
+      { text:'Hablarle desde dentro sin abrir. Pedirle que espere al amanecer.', outcome:'neutral', delta:{sanity:-15}, msg:'Acepta. Dice que esperará. Por la mañana no hay nadie, pero el suelo alrededor está helado en plena noche de verano.' },
+      { text:'No responder. Fingir que el refugio está vacío.', outcome:'good', delta:{sanity:-8}, msg:'Sin respuesta, la ilusión pierde propósito. La figura se retira hacia el bosque.' },
+      { text:'Tirar sal hacia la voz desde dentro.', outcome:'good', delta:{sanity:12,health:5}, msg:'La figura retrocede bruscamente. Una de sus manos, por un momento, no parece una mano.', requires:'sal' },
+    ]
+  },
+  {
+    id:'owlman', minNight:6,
+    title:'El Big Hoot',
+    text:'Un búho en la rama más cercana al refugio. Pero es demasiado grande. Y te mira con una fijeza que no es de ave. En ciertos relatos de los Apalaches, los búhos son observadores con agenda propia.',
+    choices:[
+      { text:'Espantarlo con ruido.', outcome:'bad', delta:{sanity:-20}, msg:'No se mueve. Emite un sonido que no es ulular. Suena demasiado parecido a una palabra.' },
+      { text:'Observarlo en silencio desde dentro.', outcome:'neutral', delta:{sanity:-10}, msg:'Se queda dos horas. Luego se va. Lo que registras en el diario esa noche no recuerdas haberlo escrito.' },
+      { text:'Ignorarlo completamente y dormir.', outcome:'good', delta:{sanity:5}, msg:'Sin atención, la presencia no tiene sustento. A la mañana, la rama está vacía y sin marcas.' },
+      { text:'Grabarlo con la grabadora.', outcome:'neutral', delta:{sanity:-8}, msg:'La grabación recoge el sonido perfectamente. También recoge tu voz respondiendo, aunque no recuerdas haber hablado.', requires:'grabadora', lore:'Grabación del Big Hoot: el búho emitió algo parecido a un nombre. No el tuyo. El de alguien que conoces.' },
+    ]
+  },
+  {
+    id:'road_shadow', minNight:4,
+    title:'La sombra en el camino',
+    text:'Una sombra humana en el único camino de acceso. Proyectada sin fuente de luz. Larga, delgada, inmóvil. Los relatos de sombras de camino son los más consistentes de toda la región.',
+    choices:[
+      { text:'Acercarte para examinarla con la linterna.', outcome:'bad', delta:{sanity:-28,health:-12}, msg:'La sombra se mueve hacia ti mientras la iluminas. Las sombras de camino no se comportan como proyecciones.', requires:'linterna' },
+      { text:'Rodear el camino por el bosque para evitarla.', outcome:'neutral', delta:{health:-10,sanity:-15}, msg:'La evitas pero en el bosque nocturno te haces cortes. Al mirar atrás, la sombra ha desaparecido.' },
+      { text:'Quedarte donde estás hasta que se vaya.', outcome:'good', delta:{sanity:-12}, msg:'Después de un tiempo sin respuesta, la sombra se disuelve. La inacción es a veces la mejor defensa.' },
+      { text:'Cruzar directamente a través de ella.', outcome:'bad', delta:{sanity:-45,health:-20}, msg:'Hay un momento de oscuridad absoluta. Cuando ves de nuevo, estás en el suelo. No sabes cuánto tiempo has estado inconsciente.' },
+    ]
+  },
+  {
+    id:'ewah', minNight:12,
+    title:'Ew\'ah — El espíritu de la locura',
+    text:'Nada visible. Pero algo está alterando tu percepción desde hace una hora. Los sonidos del bosque suenan en bucle. Ves movimiento en tus manos cuando no las mueves. Ew\'ah, el espíritu cherokee de la locura, no ataca el cuerpo.',
+    choices:[
+      { text:'Ceder. Dejar que los pensamientos fluyan.', outcome:'bad', delta:{sanity:-50}, msg:'Cedes terreno psicológico. La experiencia dura horas. Por la mañana tienes lagunas y algo en ti ha cambiado.' },
+      { text:'Técnicas de anclaje: nombrar objetos reales en voz alta.', outcome:'good', delta:{sanity:15}, msg:'Linterna. Mochila. Madera. Navaja. Nombrar lo real ancla la percepción. El efecto retrocede.' },
+      { text:'Usar un estimulante o medicación de emergencia.', outcome:'good', delta:{sanity:20,health:-8}, msg:'Rompe el efecto químicamente. Funciona, pero el cuerpo paga el precio.', requires:'antidoto' },
+      { text:'Salir al exterior. El frío puede anclar la mente.', outcome:'neutral', delta:{sanity:-5,health:-15}, msg:'El frío ayuda. Pero fuera de noche con la mente alterada también tiene sus riesgos.' },
+    ]
+  },
+  {
+    id:'tailypo', minNight:7,
+    title:'El Tailypo',
+    text:'Rascado suave y persistente bajo el suelo. Una voz pequeña, casi infantil: "Quiero lo que me es propio." Repite la frase. El Tailypo de los cuentos de advertencia siempre viene a reclamar algo.',
+    choices:[
+      { text:'"¿Qué quieres? No tengo nada tuyo."', outcome:'bad', delta:{sanity:-25,health:-15}, msg:'Responder confirma tu presencia. El rascado aumenta. La voz responde: "Sí que tienes."' },
+      { text:'Tirar al exterior algún objeto encontrado.', outcome:'good', delta:{sanity:5}, msg:'El rascado cesa. Sea lo que sea, aceptó el intercambio simbólico. Algunos rituales funcionan aunque no los entendamos.' },
+      { text:'Silencio absoluto. No confirmar presencia.', outcome:'neutral', delta:{sanity:-12}, msg:'Continúa durante tres horas. Eventualmente cesa. Hay arañazos en el suelo por la mañana.' },
+      { text:'Revisar si hay algún objeto "anómalo" en el inventario.', outcome:'good', delta:{sanity:10}, msg:'La piedra con grabados cherokee. Cuando la acercas al suelo, el rascado se detiene en seco.', requires:'piedra_rara' },
+    ]
+  },
+  {
+    id:'nunnehi', minNight:9,
+    title:'Los Nunnehi',
+    text:'Música. Lejana pero clara. Instrumentos que no deberían estar en este bosque. Los Nunnehi, el pueblo espiritual invisible cherokee, habita colinas y lugares apartados. No siempre son hostiles.',
+    choices:[
+      { text:'Seguir la música hacia su origen.', outcome:'bad', delta:{sanity:-30,health:-20}, msg:'Caminas hasta que la música cesa abruptamente. Estás en un lugar del bosque que no reconoces. Tardas horas en volver.' },
+      { text:'Escucharla desde dentro del refugio.', outcome:'good', delta:{sanity:15}, msg:'Los Nunnehi no son enemigos. Escuchar sin perseguir es correcto. La música te calma profundamente.' },
+      { text:'Intentar tocar algo en respuesta.', outcome:'neutral', delta:{sanity:-5}, msg:'La música para un momento. Luego cambia de melodía. Como si respondiera.' },
+      { text:'Registrar lo que oyes en el diario.', outcome:'good', delta:{sanity:8}, msg:'Documentas la melodía. En el diario encontrado hay una nota: "Los invisibles no dañan a quienes los respetan."', requires:'diario', lore:'Nunnehi: pueblo espiritual cherokee de las colinas. Benigno si se les respeta. Peligroso si se les persigue.' },
+    ]
+  },
+  {
+    id:'pale_crawler', minNight:14,
+    title:'El Pale Crawler',
+    text:'Un sonido de arrastre en el exterior, demasiado lento para ser un animal normal. A través de una rendija ves algo pálido, alargado, moviéndose con las articulaciones al revés. El Pale Crawler es uno de los relatos más recurrentes del folklore moderno de los Apalaches.',
+    choices:[
+      { text:'Bloquear todas las rendijas y aberturas.', outcome:'good', delta:{sanity:-8,health:5}, msg:'Sin acceso visual, la criatura pierde el vector de contacto. Se arrastra alrededor durante una hora y se va.', requires:'tela' },
+      { text:'Observarlo a través de la rendija.', outcome:'bad', delta:{sanity:-40}, msg:'El contacto visual con un Pale Crawler es un error documentado. En el folklore, es lo que les da permiso para acercarse más.' },
+      { text:'Hacer ruido para que sepa que estás ahí.', outcome:'bad', delta:{sanity:-25,health:-18}, msg:'El ruido lo orienta con precisión. El arrastre se acelera hacia tu posición.' },
+      { text:'Encender la linterna a máxima intensidad bajo la puerta.', outcome:'good', delta:{sanity:5}, msg:'La luz brillante lo hace retroceder. Parece intolerante a la iluminación directa.', requires:'linterna' },
+    ]
+  },
+  {
+    id:'mine_ghost', minNight:11,
+    title:'El fantasma minero',
+    text:'Una luz de casco de minero a cien metros. Se mueve con paso cansado. Los Apalaches tienen una historia minera oscura. Muchos nunca salieron. Este no salió.',
+    choices:[
+      { text:'Llamarle. Puede ser alguien real perdido.', outcome:'bad', delta:{sanity:-20,health:-10}, msg:'Se detiene. Se gira despacio. La proporción entre la cabeza y el cuerpo no es correcta. Apaga su luz.' },
+      { text:'Apagar tu propia luz y esperar.', outcome:'good', delta:{sanity:-5}, msg:'Sin luz propia, eres invisible para él. Los fantasmas de minero buscan luz, no calor.' },
+      { text:'Seguirle discretamente para ver adónde va.', outcome:'bad', delta:{sanity:-32,health:-15}, msg:'Te lleva a la entrada de una mina abandonada y desaparece dentro. Tardas horas en encontrar el camino de regreso.' },
+      { text:'Registrar el avistamiento en el mapa.', outcome:'good', delta:{sanity:8}, msg:'Marcas la posición de la entrada de mina que revela su ruta. Información útil para saber qué zonas evitar.', requires:'mapa_parcial', lore:'Mina abandonada marcada al este. Zona de actividad fantasmal documentada. Evitar después del anochecer.' },
+    ]
+  },
+  {
+    id:'river_walker', minNight:6,
+    title:'El River Walker',
+    text:'Pasos en el agua del arroyo cercano. Lentos, deliberados. En contra de la corriente. Ningún animal cruza un arroyo montañoso caminando así de despacio.',
+    choices:[
+      { text:'Acercarte al arroyo para ver qué es.', outcome:'bad', delta:{health:-22,sanity:-25}, msg:'El agua estaba demasiado fría para la estación. Y algo la estaba tiñendo de oscuro desde corriente arriba.' },
+      { text:'Alejarte del arroyo hacia el refugio.', outcome:'good', delta:{sanity:-8}, msg:'Los espíritus de agua tienen dominio sobre el agua pero no sobre tierra firme. El refugio es tu zona segura.' },
+      { text:'Tirar una piedra al agua para interrumpir los pasos.', outcome:'neutral', delta:{sanity:-15}, msg:'Los pasos paran un momento. Luego continúan. El impacto en el agua no tuvo efecto duradero.' },
+      { text:'Usar la brújula para determinar la dirección.', outcome:'good', delta:{sanity:5}, msg:'La aguja oscila erráticamente cerca del arroyo. Confirma presencia anómala. Pero saber qué evitar ya es ventaja.', requires:'brujula', lore:'Arroyo norte: la brújula falla en un radio de 30 metros. Presencia de entidad acuática activa.' },
+    ]
+  },
+  {
+    id:'crossroads', minNight:8,
+    title:'El espíritu del cruce',
+    text:'Sientes la necesidad de caminar hasta el cruce de senderos al este del campamento. La necesidad es extraña, casi externa. Los cruces de caminos son lugares liminales en toda la tradición apalachense.',
+    choices:[
+      { text:'Ir al cruce. Ceder a la llamada.', outcome:'bad', delta:{sanity:-30,health:-18}, msg:'Llegas al cruce y hay algo esperando ahí. No para hacerte daño. Para preguntarte algo. La pregunta que hace no tiene respuesta correcta.' },
+      { text:'Resistir el impulso. Quedarte en el refugio.', outcome:'good', delta:{sanity:-8}, msg:'El impulso cesa después de media hora. Los cruces son peligrosos porque son puntos de convergencia, no por lo que hay en ellos.' },
+      { text:'Ir al cruce pero llevar la sal para protección.', outcome:'neutral', delta:{sanity:-12,health:-5}, msg:'Llegas. Hay algo. La sal crea un perímetro pero dentro del perímetro el frío es intenso durante una hora.', requires:'sal' },
+      { text:'Buscar información antes de decidir.', outcome:'good', delta:{sanity:10}, msg:'"Cruces de caminos — no permanecer más de lo necesario. Si sientes la llamada, es que algo ya te localizó."', requires:'nota_vieja' },
+    ]
+  },
+  {
+    id:'false_child', minNight:15,
+    title:'El niño en el bosque',
+    text:'Un niño llorando a unos treinta metros. No debería haber ningún niño en estos Apalaches. El llanto es perfecto, demasiado perfecto. Sin variaciones de respiración entre sollozos.',
+    choices:[
+      { text:'Salir a buscarle. No puedes ignorar a un niño.', outcome:'bad', delta:{health:-60,sanity:-35}, msg:'No había niño. La muerte de los que siguen este instinto está documentada desde el siglo XIX en estas montañas.' },
+      { text:'Llamarle desde dentro para que se acerque él.', outcome:'bad', delta:{sanity:-30,health:-15}, msg:'Algo se acerca. Lo que llega a la entrada del refugio no es un niño.' },
+      { text:'No responder bajo ninguna circunstancia.', outcome:'good', delta:{sanity:-15}, msg:'El llanto perfecto dura dos horas. Luego cesa. El silencio que le sigue dura otra hora más.' },
+      { text:'Recordar el patrón documentado en el diario.', outcome:'good', delta:{sanity:20}, msg:'"Voz de niño en bosque nocturno — no responder, no salir. Entidad imitadora de alta peligrosidad. Documentada en todos los estados apalachenses."', requires:'diario' },
+    ]
+  },
+  {
+    id:'uktena', minNight:18,
+    title:'Uktena',
+    text:'Algo enorme moviéndose en el bosque al norte. Árboles que se inclinan a su paso. Una presencia que no reacciona a sonido ni luz, simplemente atraviesa el territorio como si los seres de tu escala no existieran. En la tradición cherokee, Uktena es la gran serpiente con poderes sobre la vida y la muerte.',
+    choices:[
+      { text:'Salir a verla de cerca. Puede ser la respuesta al misterio.', outcome:'bad', delta:{health:-70,sanity:-40}, msg:'Sobrevives. Pero lo que viste no era compatible con ninguna categoría. La imagen permanecerá.' },
+      { text:'Quedarte completamente inmóvil dentro del refugio.', outcome:'good', delta:{sanity:-15}, msg:'La presencia pasa sin detenerse. Lo que es tan grande no presta atención a lo que es tan pequeño.' },
+      { text:'Usar todos los elementos de protección disponibles.', outcome:'good', delta:{sanity:5,health:5}, msg:'Sal en el umbral, fuego encendido, refugio sellado. La acumulación de barreras simbólicas parece funcionar.', requires:'sal' },
+      { text:'Registrar el evento en detalle.', outcome:'neutral', delta:{sanity:-20}, msg:'Documentas todo mientras tiemblas. La información es valiosa. Pero el acto de documentar te obliga a prestar atención.', lore:'Uktena observado en tránsito norte-sur. Noche 18. Ni luz ni sonido lo alteran. Es parte del paisaje en una escala diferente.' },
+    ]
+  },
+];
+
+// ── Night events by tier (selected based on night number) ──
+function getEventPool() {
+  return NIGHT_EVENTS.filter(e => (e.minNight || 1) <= G.night);
+}
+
+// ── Explore outcomes ──
+const EXPLORE_FINDS = [
+  { msg:'Encuentras un arroyo en la ladera norte. El agua está fría y parece potable.', item:'agua', qty:2 },
+  { msg:'Arándanos silvestres. Tienen buen aspecto y sabor reconocible.', item:'bayas', qty:2 },
+  { msg:'Un trozo de cuerda atado a un árbol con marcas en la corteza.', item:'cuerda', qty:1, lore:'Árbol marcado con cuerda y señales talladas: alguien estuvo aquí, marcando un perímetro.' },
+  { msg:'Una mochila abandonada entre raíces. Dentro: comida enlatada intacta.', item:'comida', qty:2, lore:'Mochila abandonada: el dueño no volvió a recogerla. Lleva aquí meses.' },
+  { msg:'Madera caída perfectamente seca. Estructuralmente sólida.', item:'madera', qty:2 },
+  { msg:'Una nota doblada meticulosamente bajo una piedra plana.', item:'nota_vieja', qty:1, lore:'"No sigas las luces. No respondas si oyes tu nombre. No mires hacia el norte después de medianoche. — T.L., noche 19"' },
+  { msg:'Plumas negras enormes en el suelo. Demasiado grandes para cualquier ave de esta región.', item:'plumas', qty:2, lore:'Plumas negras anómalas: envergadura estimada 2.5 metros. No coincide con ninguna especie local documentada.' },
+  { msg:'Un botiquín metálico viejo pero con el contenido en buen estado.', item:'vendaje', qty:2 },
+  { msg:'Pilas envueltas en tela impermeable, colgando de una rama a dos metros.', item:'pilas', qty:2, lore:'Pilas en rama alta: alguien las puso deliberadamente fuera del alcance animal. Sabían lo que hacían.' },
+  { msg:'Una piedra con grabados profundos. Símbolos que no reconoces pero que se repiten.', item:'piedra_rara', qty:1, lore:'Grabados en piedra: círculo partido y tres líneas convergentes. Patrón cherokee de advertencia territorial.' },
+  { msg:'Un diario entre rocas junto al arroyo. Páginas arrugadas pero legibles.', item:'diario', qty:1, lore:'Diario, noche 12: "La figura volvió. Siempre exactamente a la misma distancia. He aprendido: si no la miro directamente, no avanza hacia mí."' },
+  { msg:'Un frasco de repelente de insectos con el 70% de contenido.', item:'repelente', qty:1 },
+  { msg:'Un estuche metálico sellado. Dentro: antídoto de serpiente con instrucciones.', item:'antidoto', qty:1 },
+  { msg:'Tela densa de lona enrollada alrededor de un árbol. Sin explicación aparente.', item:'tela', qty:2 },
+  { msg:'Una bolsita de tela con sal de roca. Estaba deliberadamente colocada en el umbral de nada.', item:'sal', qty:1, lore:'Bolsita de sal en el umbral: marca defensiva intencional. Alguien conocía los rituales de protección locales.' },
+  { msg:'Un fragmento de mapa dibujado a mano en papel plastificado.', item:'mapa_parcial', qty:1, lore:'Mapa parcial: una zona al noreste está marcada con una X roja y las palabras "no acercarse — zona del ciervo".' },
+  { msg:'Una grabadora de cinta analógica. Anticuada, pero funciona. La cinta tiene grabaciones previas.', item:'grabadora', qty:1, lore:'Grabadora: las grabaciones previas contienen voces que no reconoces contando las noches que llevan ahí. Llegan hasta la noche 22.' },
+  { msg:'Una navaja de hoja robusta con mango de madera. Buena hechura, bien equilibrada.', item:'navaja', qty:1 },
+  { msg:'Una linterna LED casi nueva. Tres pilas incluidas.', item:'linterna', qty:1 },
+  { msg:'Una brújula de latón con la tapa grabada. La aguja tiembla levemente aunque estés quieto.', item:'brujula', qty:1, lore:'Brújula: la aguja oscila sin parar en ciertas zonas del bosque. El norte magnético parece interferido.' },
+  { msg:'Restos de un campamento: lata de café, carbón, un clavo doblado. El fuego lleva semanas frío.', item:'comida', qty:1, lore:'Campamento previo abandonado hace semanas. Los objetos personales siguen aquí. Nadie volvió a recogerlos.' },
+  { msg:'Bayas de saúco maduras. Útiles también medicinalmente.', item:'bayas', qty:1 },
+  { msg:'Un chaleco de supervivencia colgado de una rama. Dentro: vendajes y analgésicos.', item:'vendaje', qty:2 },
+  { msg:'Pinos caídos por la última tormenta. Madera seca y abundante.', item:'madera', qty:3 },
+  { msg:'Un recipiente de metal sellado parcialmente enterrado. Agua de lluvia filtrada.', item:'agua', qty:2 },
+];
+
+// ── Wildlife encounters during day exploration ──
+const WILDLIFE_EVENTS = [
+  {
+    chance: 0.15,
+    fn: () => {
+      if (Math.random() < 0.5) {
+        G.player.health = Math.max(0, G.player.health - 8);
+        addStatus({ id:'picadura', name:'Picadura de insecto — fiebre leve posible', type:'bad' });
+        addNarr('<div class="narr-text" style="color:#c87070;">Algo te pica en el cuello mientras exploras. Una araña o un insecto. El dolor es agudo pero pasa pronto.</div>');
+        addSystem('-8 salud, estado: picadura');
+      }
+    }
+  },
+  {
+    chance: 0.1,
+    fn: () => {
+      G.player.health = Math.max(0, G.player.health - 12);
+      G.player.sanity = Math.max(0, G.player.sanity - 8);
+      addStatus({ id:'susto_oso', name:'Encuentro con oso — adrenalina alta', type:'neutral' });
+      addNarr('<div class="narr-text" style="color:#c87070;">Un oso negro cruza el sendero a diez metros. Os miráis. Se aleja. Tardas veinte minutos en dejar de temblar.</div>');
+      addSystem('-12 salud, -8 cordura');
+    }
+  },
+  {
+    chance: 0.08,
+    fn: () => {
+      addLore('Lobo solitario observando desde la cresta. No se acercó, pero tampoco se fue durante media hora.');
+      addNarr('<div class="narr-text">Un lobo solitario en la cresta te observa durante media hora exacta. Luego desaparece. No habías visto lobos en estos montes según los registros recientes.</div>');
+    }
+  },
+  {
+    chance: 0.12,
+    fn: () => {
+      G.player.food = Math.min(100, G.player.food + 15);
+      addNarr('<div class="narr-text">Un ciervo real cruza el claro. Se mueve como un ciervo. Sus ojos reflejan la luz correctamente. La normalidad, cuando aparece, resulta reconfortante.</div>');
+      addSystem('+15 comida (calma)');
+    }
+  },
+  {
+    chance: 0.06,
+    fn: () => {
+      G.player.health = Math.max(0, G.player.health - 18);
+      G.deathMsg = 'La serpiente era de cascabel. Sin antídoto, el veneno hizo su trabajo.';
+      addStatus({ id:'veneno', name:'Envenenado — requiere antídoto urgente', type:'bad' });
+      addNarr('<div class="narr-text" style="color:#c43030;">Una serpiente de cascabel bajo una roca. La pisas. El dolor es inmediato.</div>');
+      addSystem('-18 salud, estado: VENENO — usa antídoto pronto');
+      checkVitals();
+    }
+  },
+];
+
+const LORE_EVENTS = [
+  'Huellas en el barro: empiezan siendo de ciervo y terminan, tres metros después, siendo bípedas.',
+  'Nombre grabado con profundidad en un tronco: ELEANOR. Debajo, más pequeño: "no la sigas".',
+  'Círculo de piedras con ceniza interior reciente. Nadie debería haber estado aquí esta semana.',
+  'Una fotografía clavada en un árbol boca abajo. Al girarla, la imagen ha cambiado respecto a cuando fue tomada.',
+  'Un silbido lejano repetitivo. Tu boca empieza a imitarlo involuntariamente antes de que te des cuenta.',
+  'Las Brown Mountain Lights: tres puntos luminosos en patrón triangular sobre la cresta norte.',
+  '"Wood Booger" grabado en un árbol caído junto a huellas de unos 45 cm de longitud.',
+  'Un par de botas abandonadas en el centro de un sendero. Sin dueño a la vista. Orientadas hacia el bosque.',
+  'Árboles con la corteza raspada a tres metros de altura. No hay nada en la fauna local que alcance esa altura.',
+  'Una nota clavada en un árbol: "SI LEES ESTO NO DUERMAS EN EL CLARO NORTE". Sin firma. Con fecha reciente.',
+  'Huesos de animales dispuestos en patrón geométrico. No por predador natural. Por manos.',
+  'Una cabaña en ruinas con una sola silla en el centro. El suelo alrededor de la silla está desgastado en círculo.',
+];
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+function init() {
+  renderAll();
+}
+
+function checkSave() {
+  const saved = localStorage.getItem('apalaches_save');
+  if (saved) {
+    if (confirm('Hay una partida guardada. ¿Continuar?')) {
+      G = JSON.parse(saved);
+      showScreen('game');
+      renderAll();
+      addNarr('<span class="narr-system">// Partida cargada. Noche ' + G.night + '. El bosque te recuerda.</span>');
+    } else {
+      startNewGame();
+    }
+  } else {
+    startNewGame();
+  }
+}
+
+function startNewGame() {
+  G = {
+    night:1, phase:'day', dayActionsLeft:4,
+    player:{ health:100, sanity:80, water:80, food:80, stamina:100 },
+    shelter:0, inventory:[], statuses:[], lore:[], flags:{}, log:[],
+    deathMsg:''
+  };
+  showScreen('game');
+  renderAll();
+  document.getElementById('intro-overlay').style.display = 'flex';
+}
+
+function closeIntro() {
+  document.getElementById('intro-overlay').style.display = 'none';
+  addNarr(`<div class="narr-text">El coche se aleja. Solo el silencio de los Apalaches queda contigo.
+    <br><br>Tu refugio improvisado es poco más que nada. Tienes que sobrevivir <strong style="color:var(--amber)">30 noches</strong>.
+    El primer día comienza. Tienes <strong style="color:var(--amber)">${G.dayActionsLeft} acciones</strong> antes del anochecer.</div>`);
+  renderDayActions();
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════
+function renderAll() {
+  renderHeaderStats();
+  renderShelter();
+  renderInventory();
+  renderStatuses();
+  renderNightCounter();
+  renderLorePanel();
+  renderTimeBtns();
+}
+
+function renderHeaderStats() {
+  const p = G.player;
+  document.getElementById('header-stats').innerHTML = `
+    <div class="stat-pill"><span class="label">salud</span><div class="stat-bar-wrap"><div class="stat-bar bar-health" style="width:${p.health}%"></div></div><span class="val">${Math.round(p.health)}</span></div>
+    <div class="stat-pill"><span class="label">cordura</span><div class="stat-bar-wrap"><div class="stat-bar bar-sanity" style="width:${p.sanity}%"></div></div><span class="val">${Math.round(p.sanity)}</span></div>
+    <div class="stat-pill"><span class="label">agua</span><div class="stat-bar-wrap"><div class="stat-bar bar-water" style="width:${p.water}%"></div></div><span class="val">${Math.round(p.water)}</span></div>
+    <div class="stat-pill"><span class="label">comida</span><div class="stat-bar-wrap"><div class="stat-bar bar-food" style="width:${p.food}%"></div></div><span class="val">${Math.round(p.food)}</span></div>
+  `;
+}
+
+function renderShelter() {
+  document.getElementById('shelter-display').innerHTML = `
+    <div class="shelter-icon">${SHELTER_ICONS[G.shelter]}</div>
+    <div class="shelter-name">${SHELTER_NAMES[G.shelter]}</div>
+    <div class="shelter-level">Defensa: ${SHELTER_DEFENSE[G.shelter]}%</div>
+  `;
+}
+
+function renderInventory() {
+  const grid = document.getElementById('inv-grid');
+  const SLOTS = 20;
+  // Flatten inventory for display
+  const items = [];
+  G.inventory.forEach(e => {
+    items.push({ key: e.key, qty: e.qty, data: ITEMS[e.key] });
+  });
+  let html = '';
+  for (let i = 0; i < SLOTS; i++) {
+    if (items[i]) {
+      const it = items[i];
+      html += `<div class="inv-slot filled" onclick="useItem('${it.key}')" title="${it.data.effect}">
+        <span>${it.data.icon}</span>
+        <span class="qty">${it.qty > 1 ? it.qty : ''}</span>
+      </div>`;
+    } else {
+      html += `<div class="inv-slot"></div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function renderStatuses() {
+  const list = document.getElementById('status-list');
+  if (!G.statuses.length) {
+    list.innerHTML = '<div style="font-size:0.65rem;color:var(--text-dim);font-style:italic;">Sin efectos activos.</div>';
+    return;
+  }
+  list.innerHTML = G.statuses.map(s =>
+    `<div class="status-tag ${s.type}">${s.name}</div>`
+  ).join('');
+}
+
+function renderNightCounter() {
+  document.getElementById('night-counter').innerHTML = `
+    <div class="night-label">NOCHE</div>
+    <div class="night-num">${G.night}</div>
+    <div class="night-of">de 30</div>
+  `;
+}
+
+function renderLorePanel() {
+  const panel = document.getElementById('lore-panel');
+  if (!G.lore.length) {
+    panel.innerHTML = '<div style="font-size:0.65rem;color:var(--text-dim);font-style:italic;">Nada descubierto aún.</div>';
+    return;
+  }
+  panel.innerHTML = G.lore.slice(-5).reverse().map(l => `
+    <div class="lore-entry">${l}</div>
+  `).join('');
+}
+
+function renderTimeBtns() {
+  const area = document.getElementById('time-btn-area');
+  if (G.phase === 'day') {
+    area.innerHTML = `<button class="time-btn to-night" onclick="beginNight()">⬛ ESPERAR EL ANOCHECER</button>`;
+  } else {
+    area.innerHTML = '';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  NARRATIVE
+// ═══════════════════════════════════════════════════════
+function addNarr(html) {
+  const area = document.getElementById('narrative-area');
+  const block = document.createElement('div');
+  block.className = 'narr-block';
+  block.innerHTML = html;
+  area.appendChild(block);
+  setTimeout(() => block.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+}
+
+function addSystem(txt) {
+  addNarr(`<div class="narr-system">// ${txt}</div>`);
+}
+
+// ═══════════════════════════════════════════════════════
+//  DAY PHASE
+// ═══════════════════════════════════════════════════════
+function renderDayActions() {
+  if (G.phase !== 'day') return;
+  if (G.dayActionsLeft <= 0) {
+    addNarr(`<div class="narr-system">// No quedan más acciones para hoy. Puedes esperar el anochecer.</div>`);
+    return;
+  }
+  const avail = DAY_ACTIONS.filter(a => {
+    if (a.id === 'build' && G.shelter >= 5) return false;
+    return true;
+  });
+  let html = `<div class="narr-event">
+    <div class="narr-event-title">⬛ ACCIONES DEL DÍA — ${G.dayActionsLeft} restantes</div>
+    <div class="actions-grid">
+    ${avail.map(a => `
+      <div class="action-card" onclick="doAction('${a.id}')">
+        <div class="action-icon">${a.icon}</div>
+        <div class="action-name">${a.name}</div>
+        <div class="action-desc">${a.desc}</div>
+      </div>
+    `).join('')}
+    </div>
+  </div>`;
+  addNarr(html);
+}
+
+function doAction(id) {
+  if (G.phase !== 'day' || G.dayActionsLeft <= 0) return;
+  const action = DAY_ACTIONS.find(a => a.id === id);
+  if (!action) return;
+  G.dayActionsLeft--;
+
+  // Apply stamina cost
+  if (action.cost.stamina) G.player.stamina = Math.max(0, G.player.stamina - action.cost.stamina);
+
+  // Passive decay each action
+  G.player.water = Math.max(0, G.player.water - 8);
+  G.player.food  = Math.max(0, G.player.food - 6);
+
+  // Call the action function
+  action.fn();
+
+  // Check vitals
+  checkVitals();
+  renderAll();
+
+  // Show next actions if any left
+  setTimeout(() => renderDayActions(), 300);
+}
+
+function doExplore() {
+  const find = EXPLORE_FINDS[Math.floor(Math.random() * EXPLORE_FINDS.length)];
+  addItem(find.item, find.qty || 1);
+  if (find.lore) addLore(find.lore);
+  // Chance of ambient lore find
+  if (Math.random() < 0.35) addLore(LORE_EVENTS[Math.floor(Math.random() * LORE_EVENTS.length)]);
+  addNarr(`<div class="narr-text">Exploras el perímetro del bosque durante horas. <em>${find.msg}</em></div>`);
+  addSystem(`+${find.qty||1} ${ITEMS[find.item].name}`);
+
+  // Wildlife encounter chance
+  for (const w of WILDLIFE_EVENTS) {
+    if (Math.random() < w.chance) {
+      w.fn();
+      break;
+    }
+  }
+}
+
+function doBuild() {
+  const has_material = hasItem('madera') || hasItem('tela') || hasItem('cuerda');
+  if (!has_material) {
+    addNarr('<div class="narr-system">// Necesitas materiales para construir (madera, tela, cuerda).</div>');
+    return;
+  }
+  if (G.shelter < 5) {
+    // Consume a material
+    if (hasItem('madera')) removeItem('madera', 1);
+    else if (hasItem('tela')) removeItem('tela', 1);
+    else removeItem('cuerda', 1);
+
+    const before = SHELTER_NAMES[G.shelter];
+    G.shelter++;
+    const after = SHELTER_NAMES[G.shelter];
+    addNarr(`<div class="narr-text">Trabajas con lo que tienes. El refugio mejora.</div>`);
+    addSystem(`Refugio: ${before} → ${after}`);
+  }
+}
+
+function doRest() {
+  const staminaGain = 30 + Math.floor(Math.random() * 20);
+  G.player.stamina = Math.min(100, G.player.stamina + staminaGain);
+  // Shelter quality affects sanity restoration
+  const sanityGain = 8 + G.shelter * 4;
+  G.player.sanity = Math.min(100, G.player.sanity + sanityGain);
+  // Fever recovery chance
+  if (G.statuses.find(s => s.id === 'picadura') && Math.random() < 0.5) {
+    removeStatus('picadura');
+    addSystem('La picadura sanó con el descanso');
+  }
+  const msgs = [
+    'El silencio del día es casi reconfortante. Casi. Los pájaros suenan normales de día.',
+    'Cierras los ojos un momento. El bosque no desaparece de tu mente, pero el cuerpo descansa.',
+    'Descanso breve. Por ahora todo parece dentro de parámetros normales.',
+    'Te sientas contra el árbol más cercano. Recuerdas por qué viniste. Todavía no lo entiendes.',
+    `La calidad del ${SHELTER_NAMES[G.shelter].toLowerCase()} marca la diferencia en el descanso.`,
+  ];
+  addNarr(`<div class="narr-text">${msgs[Math.floor(Math.random()*msgs.length)]}</div>`);
+  addSystem(`+${staminaGain} energía, +${sanityGain} cordura`);
+}
+
+function doWater() {
+  const found = Math.random() < 0.8;
+  if (found) {
+    addItem('agua', 1 + (Math.random() < 0.4 ? 1 : 0));
+    G.player.water = Math.min(100, G.player.water + 30);
+    const msgs = [
+      'El arroyo de la ladera norte sigue activo. Agua fría y relativamente limpia.',
+      'Una charca de lluvia entre rocas. Filtras lo que puedes con la tela.',
+      'El manantial al oeste del claro. Alguien lo marcó con piedras apiladas.',
+    ];
+    addNarr(`<div class="narr-text">${msgs[Math.floor(Math.random()*msgs.length)]}</div>`);
+    addSystem('+Agua, +30 hidratación');
+  } else {
+    addNarr('<div class="narr-text">El arroyo está seco por la sequía. Tendrás que buscar más lejos mañana.</div>');
+    G.player.water = Math.max(0, G.player.water - 5);
+  }
+}
+
+function doForage() {
+  const roll = Math.random();
+  if (roll < 0.55) {
+    const qty = Math.random() < 0.3 ? 2 : 1;
+    addItem('bayas', qty);
+    G.player.food = Math.min(100, G.player.food + 20 * qty);
+    addNarr('<div class="narr-text">Bayas silvestres reconocibles. Las pruebas antes de cogerlas todas. Sabor correcto.</div>');
+    addSystem(`+${qty} Bayas, +${20*qty} comida`);
+  } else if (roll < 0.65) {
+    // Found bad berries
+    G.player.health = Math.max(0, G.player.health - 12);
+    G.player.food = Math.min(100, G.player.food + 10);
+    addStatus({ id:'intoxicacion', name:'Intoxicación leve — náuseas', type:'bad' });
+    addNarr('<div class="narr-text" style="color:#c87070;">Algunas bayas tenían mal aspecto y las comiste igual. Náuseas durante horas.</div>');
+    addSystem('-12 salud, estado: intoxicación');
+  } else {
+    addNarr('<div class="narr-text">El bosque no da hoy. La estación, la humedad, o algo más lo explica. Vuelves con las manos vacías.</div>');
+  }
+}
+
+function doInvestigate() {
+  // Costs more sanity the later the game
+  const sanityPenalty = Math.min(15, 5 + Math.floor(G.night / 5));
+  G.player.sanity = Math.max(0, G.player.sanity - sanityPenalty);
+
+  const entries = [
+    'Huellas de ciervo que se transforman gradualmente en huellas bípedas y luego desaparecen en una roca.',
+    'Un nombre grabado en un árbol caído: MARGARET. Abajo, en letras más pequeñas: "no respondas si te llama".',
+    'Círculo de piedras. El suelo interior está quemado pero la hierba alrededor está intacta y sana.',
+    'Una fotografía clavada en un árbol con algo afilado. La cara está borrada con el mismo objeto.',
+    'Restos de campamento. El fuego lleva semanas frío. Nadie recogió los objetos personales.',
+    'Árboles doblados hacia el mismo punto cardinal. No fue el viento. El ángulo es demasiado consistente.',
+    'Una calavera de ciervo perfectamente limpia, apoyada contra un árbol, orientada hacia el sur.',
+    'Símbolos repetidos en varios troncos. El mismo patrón. Demasiado idéntico para ser coincidencia.',
+  ];
+  const e = entries[G.night % entries.length] || entries[Math.floor(Math.random()*entries.length)];
+  addLore(e);
+  addNarr(`<div class="narr-text">Sigues marcas extrañas durante horas. Lo que encuentras no tiene explicación simple.<br><br><em style="color:var(--text-dim)">${e}</em></div>`);
+  addSystem(`-${sanityPenalty} cordura (investigar tiene un coste mental)`);
+}
+
+function doMeditate() {
+  const gain = 18 + Math.floor(Math.random() * 15) + G.shelter * 2;
+  G.player.sanity = Math.min(100, G.player.sanity + gain);
+  // Remove intoxication via rest
+  if (G.statuses.find(s => s.id === 'intoxicacion') && Math.random() < 0.6) {
+    removeStatus('intoxicacion');
+    addSystem('La náusea pasó con el descanso mental');
+  }
+  const msgs = [
+    'Técnicas de control. Respirar. Contar hacia atrás. Nombrar cosas reales. Por ahora funciona.',
+    'Media hora de silencio activo. Recuerdas quién eres. El bosque no puede quitarte eso.',
+    'El ejercicio de anclaje: cinco cosas que ves, cuatro que tocas, tres que oyes. Funciona.',
+  ];
+  addNarr(`<div class="narr-text">${msgs[Math.floor(Math.random()*msgs.length)]}</div>`);
+  addSystem(`+${gain} cordura`);
+}
+
+function doCraft() {
+  // Expanded crafting options
+  if (hasItem('madera') && hasItem('tela') && !G.flags.craftedTrap) {
+    removeItem('madera', 1); removeItem('tela', 1);
+    G.flags.craftedTrap = true;
+    addStatus({ id:'trampa_activa', name:'Trampa de perimetro activa — alerta de intrusos', type:'good' });
+    addNarr('<div class="narr-text">Construyes un sistema primitivo de alarma perimetral con cuerda y latas. No es gran cosa, pero te dará tiempo de reacción.</div>');
+    addSystem('Trampa de perímetro construida (+alerta nocturna)');
+  } else if (hasItem('madera') && !hasItem('navaja')) {
+    removeItem('madera', 1);
+    addItem('navaja', 1);
+    addNarr('<div class="narr-text">Afinas madera dura hasta conseguir algo con filo usable. Rústico, pero mejor que nada.</div>');
+    addSystem('+1 Navaja tallada');
+  } else if (hasItem('tela') && !G.flags.craftedBandage) {
+    removeItem('tela', 1);
+    addItem('vendaje', 2);
+    G.flags.craftedBandage = true;
+    addNarr('<div class="narr-text">Con la tela improvisas dos vendajes decentes. Material médico básico pero útil.</div>');
+    addSystem('+2 Vendaje improvisado');
+  } else if (hasItem('cuerda') && hasItem('madera') && !G.flags.craftedFire) {
+    removeItem('cuerda', 1); removeItem('madera', 1);
+    G.flags.craftedFire = true;
+    addItem('madera', 2);
+    addNarr('<div class="narr-text">Construyes un kit de fuego por fricción. Con práctica y esta madera seca, podrás tener fuego en minutos.</div>');
+    addSystem('Kit de fuego listo — el fuego ya no requiere madera directa en eventos');
+  } else {
+    addNarr('<div class="narr-system">// Con los materiales actuales no hay más artesanía posible. Explora para encontrar madera, tela o cuerda.</div>');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  NIGHT PHASE
+// ═══════════════════════════════════════════════════════
+function beginNight() {
+  G.phase = 'night';
+  G.player.water = Math.max(0, G.player.water - 12);
+  G.player.food  = Math.max(0, G.player.food - 10);
+
+  // Atmospheric night opener varies by progression
+  const openers = [
+    'El sol desaparece detrás de las cimas. Los Apalaches cambian cuando oscurece. Lo que era familiar se vuelve ajeno.',
+    'La oscuridad de los Apalaches no es como la de la ciudad. Es completa, antigua, viva.',
+    'Los grillos enmudecen antes de lo normal. El bosque está en silencio. Eso nunca es buena señal.',
+    'La luna esta noche ilumina lo suficiente para ver siluetas. También para que las siluetas te vean a ti.',
+    'Noche ' + G.night + '. Las primeras noches parecían largas. Ahora cada una parece más corta, más densa.',
+    'Algo en el aire ha cambiado. El olor del bosque nocturno lleva algo nuevo esta noche.',
+    'La temperatura baja más rápido de lo habitual. El frío tiene textura propia aquí dentro.',
+  ];
+  addNarr(`<div class="narr-text" style="color:var(--text-dim);font-style:italic;">${openers[G.night % openers.length]}</div>`);
+
+  // Milestone narrative messages
+  if (G.night === 5) addNarr(`<div class="narr-system">// Quinta noche. El patrón empieza a volverse reconocible. Lo que ocurre aquí no es aleatorio.</div>`);
+  if (G.night === 10) addNarr(`<div class="narr-event"><div class="narr-event-title">⬛ DÉCIMA NOCHE</div><div class="narr-event-text">Diez noches en los Apalaches. Hay algo que cambia en alguien después de tanto tiempo aquí. Lo que antes parecía imposible ya solo parece inusual.</div></div>`);
+  if (G.night === 15) addNarr(`<div class="narr-event"><div class="narr-event-title">⬛ QUINCE NOCHES</div><div class="narr-event-text">A mitad del camino. Has aprendido reglas que nadie te enseñó: no respondas a tu nombre, no sigas las luces, no mires demasiado tiempo lo que no quiere ser mirado.</div></div>`);
+  if (G.night === 20) addNarr(`<div class="narr-event"><div class="narr-event-title">⬛ VEINTE NOCHES</div><div class="narr-event-text">Veinte noches. Los registros de la grabadora llegan hasta aquí. Nadie que la dejó sobrevivió más allá de esta noche. Tú estás a punto de ser la excepción.</div></div>`);
+  if (G.night === 25) addNarr(`<div class="narr-event"><div class="narr-event-title">⬛ VEINTICINCO NOCHES</div><div class="narr-event-text">Cinco noches más. El bosque lo sabe. Noche veinticinco — algo ha cambiado en la frecuencia de los eventos. Como si el entorno estuviera probando un límite antes de que lo alcances.</div></div>`);
+
+  renderAll();
+  setTimeout(launchNightEvents, 1200);
+}
+
+function launchNightEvents() {
+  // Scale event count with progression
+  const count = (G.night > 8 && Math.random() < 0.5) ? 2 : (G.night > 20 && Math.random() < 0.3) ? 3 : 1;
+  const eventsAvail = [...getEventPool()];
+  shuffle(eventsAvail);
+
+  // Filter by flags to avoid immediate repeat
+  const used = G.flags.lastEvents || [];
+  const filtered = eventsAvail.filter(e => !used.includes(e.id));
+  const pool = filtered.length >= count ? filtered : eventsAvail;
+
+  const chosen = pool.slice(0, count);
+  G.flags.lastEvents = chosen.map(e => e.id);
+
+  // Show events in sequence
+  let delay = 800;
+  chosen.forEach((evt, idx) => {
+    setTimeout(() => showNightEvent(evt, idx === chosen.length - 1), delay);
+    delay += 500;
+  });
+}
+
+function showNightEvent(evt, isLast) {
+  const letters = ['A','B','C','D'];
+  const isLastStr = isLast ? 'true' : 'false';
+  const choicesHtml = evt.choices.map((c, i) => {
+    const locked = c.requires && !hasItem(c.requires);
+    const reqName = c.requires ? (ITEMS[c.requires]?.name || c.requires) : '';
+    const reqIcon = c.requires ? (ITEMS[c.requires]?.icon || '') : '';
+    return `<button class="choice-btn" ${locked?'disabled':''} onclick="resolveChoice(this,'${evt.id}',${i},'${isLastStr}')">
+      <span class="choice-letter">${letters[i]}.</span>${c.text}
+      ${locked ? `<span style="color:var(--text-dim);font-size:0.72rem;"> [necesitas: ${reqIcon} ${reqName}]</span>` : ''}
+    </button>`;
+  }).join('');
+
+  addNarr(`<div class="narr-event">
+    <div class="narr-event-title">🌑 ${evt.title}</div>
+    <div class="narr-event-text">${evt.text}</div>
+    <div class="choices-wrap" id="choices_${evt.id}">${choicesHtml}</div>
+  </div>`);
+}
+
+function resolveChoice(btn, evtId, choiceIdx, isLastStr) {
+  // Disable all choices in this event
+  const wrap = document.getElementById('choices_' + evtId);
+  if (wrap) wrap.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+  const evt = NIGHT_EVENTS.find(e => e.id === evtId);
+  if (!evt) return;
+  const choice = evt.choices[choiceIdx];
+  if (!choice) return;
+
+  // Apply deltas
+  const delta = choice.delta || {};
+  Object.keys(delta).forEach(k => {
+    if (k in G.player) {
+      G.player[k] = Math.max(0, Math.min(100, G.player[k] + delta[k]));
+    }
+  });
+
+  // Consume item if it's a consumable
+  if (choice.requires && hasItem(choice.requires)) {
+    if (ITEMS[choice.requires]?.type === 'consumable') {
+      removeItem(choice.requires, 1);
+    }
+  }
+
+  // Add lore if the choice unlocks it
+  if (choice.lore) addLore(choice.lore);
+
+  const cls = choice.outcome === 'good' ? 'outcome-good' : choice.outcome === 'bad' ? 'outcome-bad' : 'outcome-neutral';
+  addNarr(`<div class="narr-block"><div class="${cls} narr-text">${choice.msg}</div></div>`);
+
+  // Stat changes summary
+  const parts = [];
+  if (delta.health) parts.push(`${delta.health > 0 ? '+' : ''}${delta.health} salud`);
+  if (delta.sanity) parts.push(`${delta.sanity > 0 ? '+' : ''}${delta.sanity} cordura`);
+  if (parts.length) addSystem(parts.join(', '));
+
+  // Apply shelter defense bonus on bad outcomes
+  if (choice.outcome === 'bad' && G.shelter > 0) {
+    const saved = Math.floor(SHELTER_DEFENSE[G.shelter] * 0.2);
+    if (saved > 0) {
+      G.player.health = Math.min(100, G.player.health + saved);
+      addSystem(`+${saved} salud (defensa del refugio)`);
+    }
+  }
+
+  checkVitals();
+  renderAll();
+
+  // End night if this was the last event
+  if (isLastStr === 'true') {
+    setTimeout(endNight, 2000);
+  }
+}
+
+function endNight() {
+  const dawns = [
+    'El amanecer comienza a abrirse paso entre los árboles. Has sobrevivido otra noche.',
+    'La luz llega despacio, como si el bosque la dejara pasar de mala gana.',
+    'Los pájaros empiezan antes del alba. El sonido más hermoso que hayas escuchado.',
+    'Gris. Luego azul. Luego luz. El amanecer en los Apalaches tiene su propio protocolo.',
+    'La niebla de la mañana borra las huellas de lo que rondó esta noche. Agradeces no saber.',
+  ];
+  addNarr(`<div class="narr-text" style="color:var(--text-dim);font-family:'IM Fell English',serif;font-style:italic;">
+    ${dawns[G.night % dawns.length]}
+  </div>`);
+
+  G.night++;
+  G.phase = 'day';
+  G.dayActionsLeft = 4 + (G.shelter >= 3 ? 1 : 0); // better shelter = more daylight actions
+  G.player.stamina = Math.min(100, G.player.stamina + 30);
+  G.player.sanity  = Math.min(100, G.player.sanity  + 3); // small sanity reward for surviving
+
+  if (G.night > 30) {
+    setTimeout(showWin, 1500);
+    return;
+  }
+
+  addSystem(`Día ${G.night} — ${G.dayActionsLeft} acciones disponibles`);
+  if (G.shelter >= 3) addSystem('(+1 acción por refugio mejorado)');
+  renderAll();
+  saveGame(true);
+  setTimeout(renderDayActions, 900);
+}
+
+function showWin() {
+  const loreCount = G.lore.length;
+  const nightsSurvived = 30;
+  const finalSanity = Math.round(G.player.sanity);
+
+  let endingText = '';
+  if (finalSanity > 70) {
+    endingText = 'Saliste con la mente intacta. Pocas personas pueden decir lo mismo después de treinta noches en los Apalaches. Quizás lo que viste fue solo la naturaleza. Quizás no.';
+  } else if (finalSanity > 40) {
+    endingText = 'Saliste. Eso es lo que importa. La mente tardará semanas en reajustarse. Algunos recuerdos nunca encajarán con ninguna categoría. Aprenderás a convivir con eso.';
+  } else {
+    endingText = 'Saliste, pero algo se quedó dentro del bosque. O algo del bosque se quedó dentro de ti. En cualquier caso, ya no eres exactamente quien entró.';
+  }
+
+  document.getElementById('win-msg').innerHTML = `${endingText}
+    <br><br>
+    <div style="font-family:'Inconsolata',monospace;font-size:0.8rem;color:var(--amber-dim);line-height:2;">
+      ESTADÍSTICAS FINALES<br>
+      Noches sobrevividas: ${nightsSurvived}/30<br>
+      Cordura final: ${finalSanity}%<br>
+      Pistas descubiertas: ${loreCount}<br>
+      Refugio alcanzado: ${SHELTER_NAMES[G.shelter]}
+    </div>`;
+  localStorage.removeItem('apalaches_save');
+  showScreen('win');
+}
+
+// ── Status helpers ──
+function addStatus(s) {
+  if (!G.statuses.find(x => x.id === s.id)) {
+    G.statuses.push(s);
+    renderStatuses();
+  }
+}
+
+function removeStatus(id) {
+  G.statuses = G.statuses.filter(s => s.id !== id);
+  renderStatuses();
+}
+
+// ═══════════════════════════════════════════════════════
+//  VITALS CHECK
+// ═══════════════════════════════════════════════════════
+function checkVitals() {
+  const p = G.player;
+
+  // Remove old auto-statuses
+  const autoIds = ['auto_thirst','auto_hunger','auto_weak_sanity','auto_fever'];
+  G.statuses = G.statuses.filter(s => !autoIds.includes(s.id));
+
+  // Re-evaluate persistent conditions
+  if (p.water < 25) addStatus({ id:'auto_thirst', name:'Sed extrema — salud decrece', type:'bad' });
+  if (p.food  < 25) addStatus({ id:'auto_hunger', name:'Hambre severa — salud decrece', type:'bad' });
+  if (p.sanity < 30) addStatus({ id:'auto_weak_sanity', name:'Al borde de la locura', type:'bad' });
+
+  // Poison tick
+  if (G.statuses.find(s => s.id === 'veneno')) {
+    p.health = Math.max(0, p.health - 6);
+    addSystem('El veneno avanza: -6 salud. Usa antídoto.');
+  }
+
+  // Fever tick from bite
+  if (G.statuses.find(s => s.id === 'picadura') && Math.random() < 0.3) {
+    p.health = Math.max(0, p.health - 4);
+    p.sanity = Math.max(0, p.sanity - 3);
+    addStatus({ id:'auto_fever', name:'Fiebre de picadura — recupera con descanso', type:'bad' });
+  }
+
+  // Hunger/thirst progressive damage
+  if (p.water < 15) p.health = Math.max(0, p.health - 6);
+  if (p.food  < 15) p.health = Math.max(0, p.health - 4);
+
+  // Sanity floor from long exposure
+  if (G.night > 15 && p.sanity < 50) {
+    p.sanity = Math.max(0, p.sanity - 1);
+  }
+
+  // Death check
+  if (p.health <= 0) {
+    if (!G.deathMsg) G.deathMsg = 'Tu cuerpo finalmente cedió. Los Apalaches te reclamaron.';
+    showDeath(); return;
+  }
+  if (p.sanity <= 0) {
+    G.deathMsg = 'La locura tomó el control. En algún momento dejaste de saber quién eras. Los que te buscaron encontraron el refugio vacío.';
+    showDeath(); return;
+  }
+  if (p.water <= 0) {
+    G.deathMsg = 'La deshidratación te venció. El agua era tan importante como todo lo demás.';
+    showDeath(); return;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  INVENTORY HELPERS
+// ═══════════════════════════════════════════════════════
+function hasItem(key) {
+  return G.inventory.some(e => e.key === key && e.qty > 0);
+}
+
+function addItem(key, qty) {
+  const existing = G.inventory.find(e => e.key === key);
+  const maxQ = ITEMS[key]?.max || 3;
+  if (existing) {
+    existing.qty = Math.min(maxQ, existing.qty + qty);
+  } else {
+    G.inventory.push({ key, qty: Math.min(maxQ, qty) });
+  }
+  renderInventory();
+}
+
+function removeItem(key, qty) {
+  const existing = G.inventory.find(e => e.key === key);
+  if (!existing) return;
+  existing.qty -= qty;
+  if (existing.qty <= 0) G.inventory = G.inventory.filter(e => e.key !== key);
+  renderInventory();
+}
+
+function useItem(key) {
+  if (!hasItem(key)) return;
+  const item = ITEMS[key];
+  if (!item) return;
+
+  if (item.type === 'consumable') {
+    if (key === 'agua')   { G.player.water = Math.min(100, G.player.water + 35); addSystem('+35 hidratación'); }
+    if (key === 'comida'||key === 'bayas') { G.player.food = Math.min(100, G.player.food + 30); addSystem('+30 comida'); }
+    if (key === 'vendaje') {
+      G.player.health = Math.min(100, G.player.health + 20);
+      removeStatus('intoxicacion');
+      addSystem('+20 salud');
+    }
+    if (key === 'antidoto') {
+      G.player.health = Math.min(100, G.player.health + 20);
+      removeStatus('veneno'); removeStatus('infeccion'); removeStatus('picadura');
+      addSystem('+20 salud, eliminados: veneno / infección / picadura');
+    }
+    if (key === 'pilas' && hasItem('linterna')) { addSystem('Linterna recargada'); }
+    removeItem(key, 1);
+    renderAll();
+  } else if (item.type === 'lore') {
+    addNarr(`<div class="narr-event"><div class="narr-event-title">${item.icon} ${item.name}</div><div class="narr-event-text">${item.effect}</div></div>`);
+  } else {
+    addNarr(`<div class="narr-system">// ${item.name}: ${item.effect}</div>`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  LORE
+// ═══════════════════════════════════════════════════════
+function addLore(entry) {
+  if (!G.lore.includes(entry)) {
+    G.lore.push(entry);
+    renderLorePanel();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCREENS
+// ═══════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function showDeath() {
+  document.getElementById('death-msg').textContent = G.deathMsg || 'Los Apalaches te reclamaron.';
+  localStorage.removeItem('apalaches_save');
+  showScreen('death');
+}
+
+function resetGame() {
+  localStorage.removeItem('apalaches_save');
+  showScreen('title');
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[ch]));
+}
+
+function setActiveTab(tabId) {
+  document.querySelectorAll('.phase-tab').forEach(tab => tab.classList.remove('active'));
+  const active = document.getElementById(tabId);
+  if (active) active.classList.add('active');
+}
+
+function removeUtilityPanel() {
+  const panel = document.getElementById('utility-panel');
+  if (panel) panel.closest('.narr-block')?.remove();
+}
+
+function showNarrative() {
+  removeUtilityPanel();
+  setActiveTab('tab-narrative');
+}
+
+function showUtilityPanel(tabId, html) {
+  removeUtilityPanel();
+  setActiveTab(tabId);
+  addNarr(`<div class="utility-panel" id="utility-panel">${html}</div>`);
+}
+
+function showMap() {
+  showUtilityPanel('tab-map', `
+    <section class="utility-card">
+      <div class="utility-kicker">Cartografía de emergencia</div>
+      <div class="utility-title">Mapa de la zona</div>
+      <div class="map-frame">
+        <img class="map-image" src="img/mapalaches.jpg" alt="Mapa ilustrado de las sendas anómalas de los Apalaches">
+      </div>
+      <p class="utility-note">Tu refugio queda en el centro. Las marcas del norte, el bosque denso, el arroyo, la cueva y las ruinas se muestran a escala visual para consultar rutas sin romper la inmersión.</p>
+    </section>
+  `);
+}
+
+function showDiario() {
+  if (!G.lore.length) {
+    showUtilityPanel('tab-diario', `
+      <section class="utility-card">
+        <div class="utility-kicker">Registro personal</div>
+        <div class="utility-title">Diario de campo</div>
+        <p class="utility-note">El diario está vacío. Explora para descubrir pistas y anotaciones.</p>
+      </section>
+    `);
+    return;
+  }
+
+  const entries = G.lore.map((l, i) => `
+    <article class="journal-entry">
+      <div class="journal-entry-label">Entrada ${i + 1}</div>
+      <div class="journal-entry-text">${escapeHtml(l)}</div>
+    </article>
+  `).join('');
+
+  showUtilityPanel('tab-diario', `
+    <section class="utility-card">
+      <div class="utility-kicker">Registro personal</div>
+      <div class="utility-title">Diario de campo</div>
+      <div class="journal-list">${entries}</div>
+    </section>
+  `);
+}
+
+function looksLikeLoreHeading(line) {
+  if (line.length > 82) return false;
+  if (/[.!?]$/.test(line)) return false;
+  if (line.includes(':')) return false;
+  const first = line.trim().charAt(0);
+  return first && first === first.toUpperCase() && first !== first.toLowerCase();
+}
+
+function buildLoreDocumentationHtml() {
+  let html = '<div class="lore-doc-grid">';
+  let openSection = false;
+
+  LORE_DOCUMENTATION.forEach((line, index) => {
+    const safeLine = escapeHtml(line);
+    if (looksLikeLoreHeading(line)) {
+      if (openSection) html += '</section>';
+      html += `<section class="lore-doc-section"><h3>${safeLine}</h3>`;
+      openSection = true;
+      return;
+    }
+
+    if (!openSection) {
+      html += '<section class="lore-doc-section"><h3>Archivo documental</h3>';
+      openSection = true;
+    }
+
+    const factClass = line.includes(':') || line.length < 95 ? ' class="lore-fact"' : '';
+    html += `<p${factClass}>${safeLine}</p>`;
+
+    if ((index + 1) % 18 === 0 && openSection) {
+      html += '</section>';
+      openSection = false;
+    }
+  });
+
+  if (openSection) html += '</section>';
+  html += '</div>';
+  return html;
+}
+
+function showLoreDocs() {
+  showUtilityPanel('tab-lore', `
+    <section class="utility-card">
+      <div class="spoiler-alert">Alerta spoiler: archivo completo de lore y documentación</div>
+      <div class="utility-kicker">Dossier apalachense</div>
+      <div class="utility-title">Lore</div>
+      ${buildLoreDocumentationHtml()}
+    </section>
+  `);
+}
+
+function showCredits() {
+  document.getElementById('lore-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'lore-modal';
+  modal.className = 'lore-modal';
+  modal.innerHTML = `
+    <div class="lore-modal-box" onclick="event.stopPropagation()">
+      <div class="utility-kicker">Archivo del mundo</div>
+      <div class="utility-title">Lore de los Apalaches</div>
+      <p>Los Apalaches albergan una de las tradiciones de folklore más ricas de Norteamérica: criaturas cherokee como <em>Wampus Cat</em>, <em>Ew'ah</em> y <em>Spearfinger</em>.</p>
+      <p>Casos famosos: la <em>Bell Witch</em> de Tennessee, las <em>Luces de Brown Mountain</em> en Carolina del Norte, el <em>Mothman</em> de West Virginia.</p>
+      <p>Criaturas modernas: <em>Not Deer</em>, <em>Pale Crawler</em>, <em>Forest Mimic</em>. El bosque tiene memoria.</p>
+      <p style="color:var(--text-dim);font-size:0.82rem;letter-spacing:0.08em;">Haz clic fuera para cerrar.</p>
+    </div>
+  `;
+  modal.addEventListener('click', () => modal.remove());
+  document.body.appendChild(modal);
+}
+
+//  SAVE / LOAD
+// ═══════════════════════════════════════════════════════
+function saveGame(silent) {
+  localStorage.setItem('apalaches_save', JSON.stringify(G));
+  if (!silent) {
+    const t = document.getElementById('save-toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>

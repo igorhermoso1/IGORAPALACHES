@@ -563,6 +563,54 @@ body {
   line-height: 1.75;
   margin-top: 0.8rem;
 }
+.lore-modal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border2);
+  padding-bottom: 0.8rem;
+  margin-bottom: 1rem;
+}
+.modal-close {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border2);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+}
+.modal-close:hover { color: var(--amber-bright); border-color: var(--amber-dim); }
+.lore-modal-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.lore-modal-tab {
+  background: var(--bg3);
+  color: var(--text-dim);
+  border: 1px solid var(--border2);
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+.lore-modal-tab.active { color: var(--amber); border-color: var(--amber-dim); background: rgba(200,146,42,0.08); }
+.lore-modal-section { display: none; }
+.lore-modal-section.active { display: block; }
+.codex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.75rem; }
+.codex-card {
+  background: rgba(10,8,5,0.55);
+  border: 1px solid var(--border2);
+  padding: 0.8rem;
+}
+.codex-card h4 {
+  color: var(--amber);
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+}
+.codex-card p { font-size: 0.9rem; margin-top: 0; }
 @media (max-width: 640px) {
   .phase-indicator { gap: 0.45rem; flex-wrap: wrap; }
   .phase-tab { font-size: 0.68rem; padding: 0.35rem 0.55rem; }
@@ -683,6 +731,147 @@ body {
 }
 .save-toast.show { opacity: 1; }
 
+.save-control {
+  background: rgba(200,146,42,0.08);
+  border: 1px solid var(--amber-dim);
+  color: var(--amber);
+  font-family: 'Cinzel', serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  padding: 0.42rem 0.7rem;
+  cursor: pointer;
+}
+.save-control:hover { color: var(--amber-bright); border-color: var(--amber); background: rgba(200,146,42,0.14); }
+
+.survival-hud, .quick-inventory {
+  position: fixed;
+  z-index: 180;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+#screen-game.active ~ .survival-hud,
+#screen-game.active ~ .quick-inventory {
+  opacity: 1;
+  pointer-events: auto;
+}
+.survival-hud {
+  top: 3.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(820px, calc(100vw - 2rem));
+  background: rgba(10,8,5,0.86);
+  border: 1px solid var(--border2);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.38);
+  backdrop-filter: blur(4px);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.45rem;
+}
+.hud-stat {
+  background: rgba(26,21,16,0.8);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.45rem;
+}
+.hud-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  color: var(--text-dim);
+  font-size: 0.62rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.hud-label strong { color: var(--amber); font-size: 0.7rem; }
+.hud-bar { height: 4px; background: var(--bg3); margin-top: 0.3rem; overflow: hidden; }
+.hud-bar > span { display: block; height: 100%; transition: width 0.35s; }
+.quick-inventory {
+  right: 1rem;
+  top: 7.6rem;
+  width: 62px;
+  background: rgba(10,8,5,0.86);
+  border: 1px solid var(--border2);
+  padding: 0.35rem;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.38);
+  backdrop-filter: blur(4px);
+}
+.quick-inventory-title {
+  color: var(--amber-dim);
+  font-family: 'Cinzel', serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+.quick-inventory-grid { display: grid; grid-template-columns: 1fr; gap: 0.25rem; }
+.quick-slot {
+  position: relative;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--amber);
+  cursor: pointer;
+}
+.quick-slot.empty { color: var(--text-dim); opacity: 0.38; cursor: default; }
+.quick-slot .qty {
+  position: absolute;
+  right: 3px;
+  top: 1px;
+  color: var(--text-dim);
+  font-size: 0.58rem;
+}
+.float-feed {
+  position: fixed;
+  left: 50%;
+  top: 7.1rem;
+  transform: translateX(-50%);
+  z-index: 260;
+  pointer-events: none;
+  display: grid;
+  gap: 0.35rem;
+  width: min(380px, calc(100vw - 2rem));
+}
+.stat-float {
+  justify-self: center;
+  background: rgba(10,8,5,0.92);
+  border: 1px solid var(--border2);
+  padding: 0.4rem 0.65rem;
+  color: var(--text);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.42);
+  animation: statFloat 1.8s ease forwards;
+}
+.stat-float.bad { border-color: var(--red-bright); color: #e08a7f; }
+.stat-float.good { border-color: var(--green-bright); color: #8fd5a2; }
+@keyframes statFloat {
+  0% { opacity: 0; transform: translateY(8px); }
+  18% { opacity: 1; transform: translateY(0); }
+  78% { opacity: 1; transform: translateY(-6px); }
+  100% { opacity: 0; transform: translateY(-18px); }
+}
+.map-sector-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.55rem; margin-top: 0.9rem; }
+.map-sector {
+  background: rgba(10,8,5,0.55);
+  border: 1px solid var(--border2);
+  padding: 0.65rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.map-sector strong { display: block; color: var(--amber); font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.08em; margin-bottom: 0.25rem; }
+
+@media (max-width: 900px) {
+  .survival-hud { top: 3.2rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quick-inventory { top: auto; bottom: 0.8rem; right: 0.8rem; width: min(320px, calc(100vw - 1.6rem)); }
+  .quick-inventory-grid { grid-template-columns: repeat(6, 1fr); }
+  .float-feed { top: 9.2rem; }
+}
+
 .glitch-text {
   position: relative; display: inline-block;
 }
@@ -711,7 +900,7 @@ body {
   <div class="game-header">
     <div class="header-title">APALACHES</div>
     <div class="header-stats" id="header-stats"></div>
-    <div style="font-size:0.7rem; color:var(--text-dim); cursor:pointer;" onclick="saveGame()">[ guardar ]</div>
+    <button class="save-control" onclick="saveGame()">Guardar</button>
   </div>
 
   <!-- 3-col layout -->
@@ -735,7 +924,6 @@ body {
         <div class="phase-tab active" id="tab-narrative" onclick="showNarrative()">Narrativa</div>
         <div class="phase-tab" id="tab-map" onclick="showMap()">Mapa</div>
         <div class="phase-tab" id="tab-diario" onclick="showDiario()">Diario</div>
-        <div class="phase-tab" id="tab-lore" onclick="showLoreDocs()">Lore</div>
       </div>
 
       <div class="narrative-area" id="narrative-area"></div>
@@ -748,6 +936,7 @@ body {
       <div class="night-counter" id="night-counter"></div>
 
       <div class="panel-title">Pistas halladas</div>
+      <button class="save-control" style="width:100%;margin-bottom:0.75rem;" onclick="showLoreDocs()">Abrir archivo</button>
       <div id="lore-panel"></div>
     </div>
 
@@ -782,6 +971,9 @@ body {
 
 <!-- Save toast -->
 <div class="save-toast" id="save-toast">✓ partida guardada</div>
+<div class="survival-hud" id="survival-hud"></div>
+<aside class="quick-inventory" id="quick-inventory"></aside>
+<div class="float-feed" id="float-feed"></div>
 
 <script>
 // ═══════════════════════════════════════════════════════
@@ -2008,8 +2200,10 @@ function closeIntro() {
 // ═══════════════════════════════════════════════════════
 function renderAll() {
   renderHeaderStats();
+  renderFixedHud();
   renderShelter();
   renderInventory();
+  renderQuickInventory();
   renderStatuses();
   renderNightCounter();
   renderLorePanel();
@@ -2024,6 +2218,25 @@ function renderHeaderStats() {
     <div class="stat-pill"><span class="label">agua</span><div class="stat-bar-wrap"><div class="stat-bar bar-water" style="width:${p.water}%"></div></div><span class="val">${Math.round(p.water)}</span></div>
     <div class="stat-pill"><span class="label">comida</span><div class="stat-bar-wrap"><div class="stat-bar bar-food" style="width:${p.food}%"></div></div><span class="val">${Math.round(p.food)}</span></div>
   `;
+}
+
+function renderFixedHud() {
+  const hud = document.getElementById('survival-hud');
+  if (!hud) return;
+  const p = G.player;
+  const stats = [
+    ['salud', p.health, 'bar-health'],
+    ['cordura', p.sanity, 'bar-sanity'],
+    ['agua', p.water, 'bar-water'],
+    ['comida', p.food, 'bar-food'],
+    ['energia', p.stamina, 'bar-sanity']
+  ];
+  hud.innerHTML = stats.map(([label, value, cls]) => `
+    <div class="hud-stat">
+      <div class="hud-label"><span>${label}</span><strong>${Math.round(value)}</strong></div>
+      <div class="hud-bar"><span class="${cls}" style="width:${Math.max(0, Math.min(100, value))}%"></span></div>
+    </div>
+  `).join('');
 }
 
 function renderShelter() {
@@ -2055,6 +2268,26 @@ function renderInventory() {
     }
   }
   grid.innerHTML = html;
+}
+
+function renderQuickInventory() {
+  const panel = document.getElementById('quick-inventory');
+  if (!panel) return;
+  const items = G.inventory.map(e => ({ key:e.key, qty:e.qty, data:ITEMS[e.key] })).filter(e => e.data);
+  const visible = items.slice(0, 8);
+  let html = '<div class="quick-inventory-title">MOCHILA</div><div class="quick-inventory-grid">';
+  for (let i = 0; i < 8; i++) {
+    const it = visible[i];
+    if (it) {
+      html += `<button class="quick-slot" onclick="useItem('${it.key}')" title="${it.data.name}: ${it.data.effect}">
+        <span>${it.data.icon}</span><span class="qty">${it.qty > 1 ? it.qty : ''}</span>
+      </button>`;
+    } else {
+      html += '<div class="quick-slot empty">.</div>';
+    }
+  }
+  html += '</div>';
+  panel.innerHTML = html;
 }
 
 function renderStatuses() {
@@ -2110,6 +2343,21 @@ function addNarr(html) {
 
 function addSystem(txt) {
   addNarr(`<div class="narr-system">// ${txt}</div>`);
+  showFloatingSystem(txt);
+}
+
+function showFloatingSystem(txt) {
+  const feed = document.getElementById('float-feed');
+  if (!feed) return;
+  const important = /[+-]\d+|salud|cordura|agua|comida|hidrataci|energ|guardada/i.test(txt);
+  if (!important) return;
+  const bad = /-\d+|veneno|picadura|hambre|sed|locura|infecci/i.test(txt);
+  const good = /\+\d+|cur|guardada|refugio|agua|comida|energ/i.test(txt) && !bad;
+  const el = document.createElement('div');
+  el.className = `stat-float ${bad ? 'bad' : good ? 'good' : ''}`;
+  el.textContent = txt;
+  feed.appendChild(el);
+  setTimeout(() => el.remove(), 1900);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2698,6 +2946,14 @@ function showMap() {
         <img class="map-image" src="img/mapalaches.jpg" alt="Mapa ilustrado de las sendas anómalas de los Apalaches">
       </div>
       <p class="utility-note">Tu refugio queda en el centro. Las marcas del norte, el bosque denso, el arroyo, la cueva y las ruinas se muestran a escala visual para consultar rutas sin romper la inmersión.</p>
+      <div class="map-sector-grid">
+        <div class="map-sector"><strong>Refugio central</strong>Zona segura relativa. Construir, descansar y preparar la noche.</div>
+        <div class="map-sector"><strong>Arroyo norte</strong>Agua, brújula alterada y actividad del River Walker.</div>
+        <div class="map-sector"><strong>Bosque denso</strong>Recursos, imitadores, figuras inmóviles y not-deer.</div>
+        <div class="map-sector"><strong>Cruce este</strong>Lugar liminal. Riesgo alto de llamadas y pactos simbólicos.</div>
+        <div class="map-sector"><strong>Mina abandonada</strong>Zona de lámparas, fantasmas mineros y rutas que no conviene seguir.</div>
+        <div class="map-sector"><strong>Ruinas y cueva</strong>Pistas antiguas, grabados y presencias territoriales.</div>
+      </div>
     </section>
   `);
 }
@@ -2770,15 +3026,66 @@ function buildLoreDocumentationHtml() {
   return html;
 }
 
+function loreKeyCards() {
+  const cards = [
+    ['Criaturas del bosque', 'Wampus Cat, Not-Deer, Pale Crawler, Wood Booger y figuras que vigilan desde el borde de los árboles.'],
+    ['Entidades imitadoras', 'Voces familiares, niños falsos, susurros y llamadas que necesitan una respuesta para localizarte.'],
+    ['Presagios', 'Mothman, luces de Brown Mountain, olor a ceniza y patrones que anuncian algo antes de que ocurra.'],
+    ['Lugares liminales', 'Cruces de caminos, minas, arroyos, cuevas, ruinas y casas donde el territorio cambia de reglas.'],
+    ['Tradición cherokee', 'Uktena, Nunnehi, Spearfinger, Ew’ah y entidades que conviene tratar como memoria cultural, no solo monstruos.'],
+    ['Reglas aprendidas', 'No respondas voces. No sigas luces. No mires demasiado. No salgas por algo que parece indefenso.']
+  ];
+  return `<div class="codex-grid">${cards.map(([title, text]) => `<article class="codex-card"><h4>${title}</h4><p>${text}</p></article>`).join('')}</div>`;
+}
+
+function inventoryCodexCards() {
+  const keys = ['linterna','sal','diario','nota_vieja','piedra_rara','grabadora','mapa_parcial','brujula','plumas'];
+  return `<div class="codex-grid">${keys.map(key => {
+    const item = ITEMS[key];
+    return `<article class="codex-card"><h4>${item.icon} ${item.name}</h4><p>${item.effect}</p></article>`;
+  }).join('')}</div>`;
+}
+
+function switchLoreTab(tab) {
+  document.querySelectorAll('.lore-modal-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.lore-modal-section').forEach(s => s.classList.toggle('active', s.id === 'lore-section-' + tab));
+}
+
 function showLoreDocs() {
-  showUtilityPanel('tab-lore', `
-    <section class="utility-card">
-      <div class="spoiler-alert">Alerta spoiler: archivo completo de lore y documentación</div>
-      <div class="utility-kicker">Dossier apalachense</div>
-      <div class="utility-title">Lore</div>
-      ${buildLoreDocumentationHtml()}
-    </section>
-  `);
+  setActiveTab('tab-lore');
+  document.getElementById('lore-modal')?.remove();
+  const discovered = G.lore.length
+    ? `<div class="journal-list">${G.lore.map((l, i) => `<article class="journal-entry"><div class="journal-entry-label">Pista ${i + 1}</div><div class="journal-entry-text">${escapeHtml(l)}</div></article>`).join('')}</div>`
+    : '<p class="utility-note">Todavía no has descubierto pistas en esta partida. Explora, investiga y sobrevive a encuentros para llenar este archivo.</p>';
+  const modal = document.createElement('div');
+  modal.id = 'lore-modal';
+  modal.className = 'lore-modal';
+  modal.innerHTML = `
+    <div class="lore-modal-box" onclick="event.stopPropagation()">
+      <div class="lore-modal-head">
+        <div>
+          <div class="utility-kicker">Archivo vivo</div>
+          <div class="utility-title">Lore de los Apalaches</div>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('lore-modal')?.remove()">Cerrar</button>
+      </div>
+      <div class="lore-modal-tabs">
+        <button class="lore-modal-tab active" data-tab="resumen" onclick="switchLoreTab('resumen')">Resumen</button>
+        <button class="lore-modal-tab" data-tab="pistas" onclick="switchLoreTab('pistas')">Pistas</button>
+        <button class="lore-modal-tab" data-tab="objetos" onclick="switchLoreTab('objetos')">Objetos</button>
+        <button class="lore-modal-tab" data-tab="documental" onclick="switchLoreTab('documental')">Documental</button>
+      </div>
+      <section class="lore-modal-section active" id="lore-section-resumen">${loreKeyCards()}</section>
+      <section class="lore-modal-section" id="lore-section-pistas">${discovered}</section>
+      <section class="lore-modal-section" id="lore-section-objetos">${inventoryCodexCards()}</section>
+      <section class="lore-modal-section" id="lore-section-documental">
+        <div class="spoiler-alert">Alerta spoiler: archivo completo de lore y documentación</div>
+        ${buildLoreDocumentationHtml()}
+      </section>
+    </div>
+  `;
+  modal.addEventListener('click', () => modal.remove());
+  document.body.appendChild(modal);
 }
 
 function showCredits() {
@@ -2806,8 +3113,10 @@ function saveGame(silent) {
   localStorage.setItem('apalaches_save', JSON.stringify(G));
   if (!silent) {
     const t = document.getElementById('save-toast');
+    if (t) t.textContent = '✓ partida guardada — noche ' + G.night;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
+    showFloatingSystem('Partida guardada');
   }
 }
 
